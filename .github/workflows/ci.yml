@@ -10,6 +10,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  db:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: cinematch
+          POSTGRES_PASSWORD: cinematch
+          POSTGRES_DB: cinematch
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cinematch -d cinematch"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Write .env.local for DB migration tests
+        run: |
+          cp .env.example .env.local
+          printf 'DATABASE_URL=%s%s%s:%s@localhost:5432/%s\n' postgresql '://' cinematch cinematch cinematch >> .env.local
+
+      - run: npm run test:db
+
   ci:
     runs-on: ubuntu-latest
     steps:

@@ -11,6 +11,7 @@
     "format:write": "prettier --write .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
+    "test:db": "vitest run --config vitest.db.config.ts",
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
