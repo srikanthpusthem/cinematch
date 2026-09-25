@@ -1,0 +1,18 @@
+{
+  "season_number": 1,
+  "air_date": "2008-01-20",
+  "episodes": [
+    {
+      "episode_number": 1,
+      "name": "Pilot",
+      "air_date": "2008-01-20",
+      "runtime": 58
+    },
+    {
+      "episode_number": 2,
+      "name": "Cat's in the Bag...",
+      "air_date": "2008-01-27",
+      "runtime": null
+    }
+  ]
+}
