@@ -49,15 +49,15 @@
       "key": "migration-setup",
       "milestone": "M0 Foundation",
       "title": "M0: Fix and verify database migration setup",
-      "lane": "Astra",
+      "lane": "Claude",
       "criteria": "The documented .env.local workflow works on a clean checkout. Apply migrations twice against fresh pgvector Postgres and verify the vector extension without exposing credentials."
     },
     {
       "key": "foundation-validation",
       "milestone": "M0 Foundation",
       "title": "M0: Verify foundation on phone and laptop",
-      "lane": "Astra",
-      "criteria": "Lint, formatting, typecheck, unit tests and production smoke pass. Exercise phone and desktop viewports; record CI and database migration verification evidence."
+      "lane": "Grok",
+      "criteria": "Exercise the production landing page on phone and desktop, test visible content and horizontal overflow, and report actual CI/browser evidence. Database verification is owned by #10 and aggregated by the lead in #3."
     },
     {
       "key": "vercel-setup",
@@ -71,7 +71,7 @@
       "key": "public-gate",
       "milestone": "M0 Foundation",
       "title": "M0: Document and enforce the public deployment gate",
-      "lane": "Astra",
+      "lane": "Codex",
       "criteria": "Document per-session and per-IP LLM caps before any public link. Verify M0 exposes no paid inference route. Require protected deployment until quota enforcement is delivered and verified; include this gate in the owner deployment checklist."
     },
     {
@@ -132,49 +132,49 @@
       "key": "provider-interface",
       "milestone": "M2 Recommender",
       "title": "M2: Hosted embedding and reranker interfaces",
-      "lane": "Astra",
+      "lane": "Codex",
       "criteria": "Swappable server-only interfaces have timeout, cancellation and validated responses. Deterministic fixtures enable offline work. No unapproved provider or spending."
     },
     {
       "key": "title-embeddings",
       "milestone": "M2 Recommender",
       "title": "M2: Title embeddings and pgvector retrieval",
-      "lane": "Astra",
+      "lane": "Codex",
       "criteria": "Resumable versioned embeddings of overview, genres and keywords use validated dimensions. Retrieve nearest 50 with a tested pgvector index strategy."
     },
     {
       "key": "taste-vector",
       "milestone": "M2 Recommender",
       "title": "M2: Guest taste vector and feedback updates",
-      "lane": "Astra",
+      "lane": "Codex",
       "criteria": "Average valid seed embeddings with documented weighting; explicit likes/dislikes adjust bounded taste preferences, while watched only suppresses repeats unless accompanied by a rating. Treat skips as weak/ambiguous signals. Support zero-seed cold start. Tests distinguish each event, reject invalid vectors and prevent repeated-event drift."
     },
     {
       "key": "hard-filters",
       "milestone": "M2 Recommender",
       "title": "M2: Recommendation hard filters and exhaustion behavior",
-      "lane": "Astra",
+      "lane": "Codex",
       "criteria": "Apply US services, explicit genre exclusions, format, length and watched exclusions BEFORE limiting the eligible retrieval pool, or use tested adaptive overfetch. Define length boundaries. Never silently relax constraints; explain shortages and ask which constraint to loosen. Test sparse service/genre combinations and cold-start fallback."
     },
     {
       "key": "rerank",
       "milestone": "M2 Recommender",
       "title": "M2: Candidate-only mood reranking and explanations",
-      "lane": "Astra",
+      "lane": "Codex",
       "criteria": "Rank only eligible candidate IDs using explicit taste and mood signals, diversify near-duplicate franchises/genres, and return up to five distinct choices. Ground explanations in catalog metadata and user answers; never invent facts. Compare with deterministic baseline. Reject hallucinated IDs and use tested deterministic fallback on timeout, outage or invalid output."
     },
     {
       "key": "recommendation-api",
       "milestone": "M2 Recommender",
       "title": "M2: Recommendation API with enforced LLM budgets",
-      "lane": "Astra",
+      "lane": "Codex",
       "criteria": "Shared concurrency-safe session and IP quotas precede every paid embedding/rerank call, bound retries and fail closed. Tests prove rejected requests make zero provider calls. Typed API supports show-more and fixtures."
     },
     {
       "key": "offline-eval",
       "milestone": "M2 Recommender",
       "title": "M2: Thirty-case recommendation evaluation and latency",
-      "lane": "Astra",
+      "lane": "Codex",
       "criteria": "Create at least 30 hand-reviewed cases spanning cold start, niche taste, mainstream taste, sparse services, exclusions and movies/series. Compare ranking to a simple deterministic baseline with documented rubrics; report hard-filter validity, availability freshness, diversity, explanation faithfulness, latency p50/p95 and failure rate. Quality claims require measured evidence, not just sensible-looking examples."
     },
     {

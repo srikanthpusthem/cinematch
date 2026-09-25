@@ -2,7 +2,7 @@
 
 A web app (phone and laptop) that helps you choose a movie or series quickly, with no account or watch history required. See [product direction](docs/product.md) for the experience, recommendation quality goals and approved stack.
 
-Contributors and agents: read [AGENTS.md](AGENTS.md) first, then [project operations](docs/project.md). Track and claim work on the [CineMatch board](https://github.com/users/srikanthpusthem/projects/3). Claude and Grok have dedicated entrypoints; all agents follow the same rules. M0 is active; later lanes require owner authorization.
+Contributors and agents: read [AGENTS.md](AGENTS.md) first, then [project operations](docs/project.md). Track and claim work on the [CineMatch board](https://github.com/users/srikanthpusthem/projects/3). Claude and Grok have dedicated entrypoints; all agents follow the same rules. Astra manages priorities and reviews; Claude, Grok and Codex workers pick up eligible Ready tickets.
 
 This is the **M0 (Foundation)** scaffold: an empty app with CI, tooling, and DB migrations wired up. No catalog data or recommendation logic yet — that's M1 and beyond.
 

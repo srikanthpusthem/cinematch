@@ -1,12 +1,13 @@
-# Grok entrypoint
+# Grok worker entrypoint
 
-Read [AGENTS.md](AGENTS.md) fully before any work. It is the canonical source of
-shared rules, claiming protocol, verification and owner approval boundaries.
+Read [AGENTS.md](AGENTS.md) completely, then [project operations](docs/project.md)
+and [product direction](docs/product.md). Astra is EM/PO/technical lead; Grok
+implements eligible Ready tickets and provides test evidence for review.
 
-Read [docs/product.md](docs/product.md) for the product and approved stack, and
-[docs/project.md](docs/project.md) for the board, milestone gates and handoffs.
-
-Your proposed lane is UI (M3, initially against a mock API). This is not an active
-claim or authorization to start. M0 belongs to Astra; wait for Srikanth to open
-later work and for an eligible issue to become Ready. Use `agent:grok` and
-`grok/<number>-<slug>` when claiming. Report when code or browser checks cannot run.
+Start with the lowest eligible `lane:grok` ticket on the CineMatch board. The
+initial ticket is #11 (foundation phone/desktop validation); the later default
+lane is UI. Claim using `agent:grok`, a unique session identifier and a
+`grok/<number>-<slug>-<session>` branch. Follow file boundaries and dependencies.
+Do not wait for Srikanth to assign an already-Ready ticket, and do not start Backlog
+work. One issue per PR; never merge your own PR. If execution is unavailable, state
+that clearly and ask the lead to route validation to an execution-capable worker.

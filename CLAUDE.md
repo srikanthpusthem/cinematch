@@ -1,11 +1,12 @@
-# Claude entrypoint
+# Claude worker entrypoint
 
-Read [AGENTS.md](AGENTS.md) fully before any work. It is the canonical source of
-shared rules, claiming protocol, verification and owner approval boundaries.
+Read [AGENTS.md](AGENTS.md) completely, then [project operations](docs/project.md)
+and [product direction](docs/product.md). Astra is EM/PO/technical lead; Claude
+implements eligible Ready tickets and provides test evidence for review.
 
-Read [docs/product.md](docs/product.md) for the product and approved stack, and
-[docs/project.md](docs/project.md) for the board, milestone gates and handoffs.
-
-Your proposed lane is Data (M1). This is not an active claim or authorization to
-start. M0 belongs to Astra; wait for Srikanth to open later work and for an eligible
-issue to become Ready. Use `agent:claude` and `claude/<number>-<slug>` when claiming.
+Start with the lowest eligible `lane:claude` ticket on the CineMatch board. The
+initial ticket is #10 (database environment/migration setup); the later default
+lane is Data. Claim using `agent:claude`, a unique session identifier and a
+`claude/<number>-<slug>-<session>` branch. Follow file boundaries and dependencies.
+Do not wait for Srikanth to assign an already-Ready ticket, and do not start Backlog
+work. One issue per PR; never merge your own PR. If nothing is eligible, report idle.

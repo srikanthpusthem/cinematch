@@ -152,11 +152,13 @@ export function run({ gh, log = console.log, dryRun = true, plan }) {
       color: "d73a4a",
       description: "Cannot proceed; see issue explanation",
     },
-    ...["Astra", "Claude", "Grok", "Owner", "Unassigned"].map((name) => ({
-      name: `lane:${name.toLowerCase()}`,
-      color: "0075ca",
-      description: `Suggested ${name} lane; does not reserve or claim work`,
-    })),
+    ...["Astra", "Claude", "Codex", "Grok", "Owner", "Unassigned"].map(
+      (name) => ({
+        name: `lane:${name.toLowerCase()}`,
+        color: "0075ca",
+        description: `Suggested ${name} lane; does not reserve or claim work`,
+      }),
+    ),
   ];
   log(`${dryRun ? "DRY RUN — no writes" : "APPLY"}: ${plan.repo}`);
   log(
@@ -235,7 +237,7 @@ export function run({ gh, log = console.log, dryRun = true, plan }) {
       throw new Error(
         `Refusing new work in closed milestone ${milestone.title}`,
       );
-    const body = `${marker(entry.key)}\n\n## Acceptance criteria\n\n${entry.criteria}\n\n## Coordination\n\nSuggested lane: **${entry.lane}** (not an active claim). Follow AGENTS.md and ${project.url}. M1+ stays Backlog until M0 is complete and Srikanth explicitly opens those lanes.\n\n${entry.blocked ? "Blocked: requires owner action or completion evidence; see acceptance criteria." : "Only claim when Ready, unassigned, unblocked, and without an active agent claim."}\n\n## Verification\n\nReport commands and results, assumptions and failures. One issue per branch/PR; owner reviews and merges. No public link before LLM session/IP caps are verified; owner handles Vercel/account/billing steps.\n`;
+    const body = `${marker(entry.key)}\n\n## Acceptance criteria\n\n${entry.criteria}\n\n## Coordination\n\nSuggested lane: **${entry.lane}** (not an active claim). Follow AGENTS.md and ${project.url}. Astra is the EM/PO/technical lead. Only lead-released Ready tickets are available; dependencies and file boundaries control pickup.\n\n${entry.blocked ? "Blocked: requires owner action or completion evidence; see acceptance criteria." : "Only claim when Ready, unassigned, unblocked, and without an active agent claim."}\n\n## Verification\n\nReport commands and results, assumptions and failures. One issue per branch/PR; owner reviews and merges. No public link before LLM session/IP caps are verified; owner handles Vercel/account/billing steps.\n`;
     if (!issue) {
       issue = api(`repos/${plan.repo}/issues`, "POST", {
         title: entry.title,

@@ -7,7 +7,13 @@ precedence. Do not change these rules merely to bypass a gate.
 
 ## Source of truth
 
-- Owner and reviewer: Srikanth (`srikanthpusthem`). Agents build; owner merges.
+- Product sponsor and final merge authority: Srikanth (`srikanthpusthem`).
+- Astra is EM/PO/technical lead: owns roadmap, product/architecture decisions, issue
+  acceptance, prioritization, dependency gates, delegation and technical review.
+- Implementation belongs to worker agents. Astra does not take routine coding
+  tickets; it prepares work, reviews evidence and resolves cross-lane decisions.
+- Claude, Grok and Codex workers claim eligible tickets; Srikanth is not required
+  to assign each ticket or approve routine product and engineering decisions.
 - Repository: https://github.com/srikanthpusthem/cinematch
 - Board: https://github.com/users/srikanthpusthem/projects/3
 - Product and approved stack: [docs/product.md](docs/product.md).
@@ -20,7 +26,7 @@ precedence. Do not change these rules merely to bypass a gate.
 1. Read the issue, linked dependencies, open PRs and current board state. Use
    `gh auth status` and require the `project` scope. If missing, stop and give the
    owner `gh auth refresh -h github.com -s project`. Never expose tokens.
-2. Only take **Ready** work in an owner-opened milestone. It must have no assignee,
+2. Only take **Ready** work explicitly released by the lead. It must have no assignee,
    no `blocked` label and no `agent:*` label or unreleased claim comment. Choose
    the lowest issue number in the lowest eligible milestone unless the owner or
    lead has explicitly allocated another lane. `lane:*` is a suggestion, not a claim.
@@ -75,15 +81,26 @@ verify shared, server-side per-session and per-IP caps on all paid LLM calls.
 Until then deployment stays protected. Do not buy services, choose commercial
 licensing, change availability provider or expand beyond US without owner decision.
 
-## Milestone and delegation gate
+## Delegation and milestone gates
 
-M0 implementation has one owner: Astra. Read-only audits may assist, but do not run
-parallel M0 implementation. Existing scaffold PR #2 is merged; M0 itself remains
-open until CI, deployment and coordination exit criteria are evidenced.
+Srikanth explicitly appointed Astra as EM/PO/technical lead. The lead can revise
+milestones and acceptance criteria, release dependency-ready tickets and allocate
+lanes without asking Srikanth for every routine decision. Do not infer that all
+Backlog issues are available: Ready is the explicit pickup authorization.
 
-Stop after M0 and report merged/open/failed/owner-needed work. Do not start M1 or
-later until Srikanth explicitly authorizes it. Once authorized, the proposed lanes
-are Claude for Data (M1), Astra for Recommender (M2 fixtures until M1), and Grok for
-UI (M3 mock API until M2). Opening multiple lanes requires owner approval; the lead
-then promotes dependency-ready issues to Ready. Never treat an issue label as proof
-that an external agent session has actually started.
+The single-agent scaffold phase is complete through merged PR #2. Remaining M0
+work can now be delegated in non-overlapping scopes: Claude handles database setup,
+Grok handles foundation browser validation, and a Codex worker handles deployment
+gate documentation. M0 remains incomplete until its actual exit criteria pass.
+
+After foundation, the default lanes are Claude for Data, Codex workers for
+Recommender, and Grok for UI. The lead controls dependency gates and may release
+fixture/mock work independently of live integrations. Lane labels are routing,
+not an active claim. Maximum one active implementation ticket per worker session;
+hand off for review before taking another. Never mark a session running without
+an actual claim or execution acknowledgement.
+
+Srikanth still handles final merges and account/billing/Vercel clicks. Public
+release, paid services, commercial licensing and country expansion retain the
+explicit owner boundaries above. The lead reports outcomes, failures, risks and
+owner actions; it does not ask the owner to micromanage normal implementation.
