@@ -74,6 +74,6 @@ npm run db:migrate    # apply pending migrations
 npm run test:db       # apply migrations twice and verify pgvector + the migration journal
 ```
 
-drizzle-kit reads `DATABASE_URL` from `.env.local` (see `src/db/database-url.ts`). A non-empty `DATABASE_URL` set in the shell environment takes precedence, e.g. `DATABASE_URL=postgresql://... npm run db:migrate` to target another database. If neither is set, the command fails with a message pointing at `.env.example`.
+drizzle-kit reads `DATABASE_URL` from `.env.local` (see `src/db/database-url.ts`). A non-empty `DATABASE_URL` set in the shell environment takes precedence, e.g. `DATABASE_URL=postgresql://... npm run db:migrate` to target another database. If neither is set, the command fails with a message pointing at `.env.example`. Quote the value if it contains `#` (for example in a password), since an unquoted `#` starts a comment; the loader rejects that case rather than silently truncating the URL.
 
 `npm run test:db` needs a running pgvector Postgres (`docker compose up -d`) and is not part of `npm run test`. CI runs it against a fresh `pgvector/pgvector:pg16` service on every pull request (the `db` job in `.github/workflows/ci.yml`).
