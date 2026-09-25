@@ -30,6 +30,8 @@ Fill in `DATABASE_URL` in `.env.local` (the docker-compose default is shown as a
 npm run db:migrate
 ```
 
+`drizzle-kit` now reads `DATABASE_URL` from `.env.local` by default. If you set a non-empty `DATABASE_URL` in the shell, that explicit environment value overrides `.env.local`.
+
 `TMDB_API_KEY` is read by the server-only TMDB client in `src/tmdb/` (v3 API key or v4 read access token). It isn't needed for `npm run test`, which uses fixtures. `LLM_API_KEY` is a placeholder for M2.
 
 ## Running the app
@@ -71,4 +73,5 @@ Migrations live in `drizzle/` and are managed with [drizzle-kit](https://orm.dri
 ```bash
 npm run db:generate   # generate a migration from schema changes in src/db/schema.ts
 npm run db:migrate     # apply pending migrations
+npm run test:db        # re-apply migrations twice and verify pgvector + migration journal
 ```
