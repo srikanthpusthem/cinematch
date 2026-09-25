@@ -1,0 +1,14 @@
+{
+  "page": 2,
+  "total_pages": 2,
+  "total_results": 3,
+  "results": [
+    {
+      "id": 680,
+      "title": "Pulp Fiction",
+      "release_date": "",
+      "genre_ids": [53, 80],
+      "popularity": null
+    }
+  ]
+}
