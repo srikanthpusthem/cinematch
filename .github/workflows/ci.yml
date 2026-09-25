@@ -38,3 +38,39 @@ jobs:
 
       - name: Run Playwright smoke test
         run: npm run test:e2e
+
+  db:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: cinematch
+          POSTGRES_PASSWORD: cinematch
+          POSTGRES_DB: cinematch
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cinematch"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Follow the README workflow: DATABASE_URL comes from .env.local, not the
+      # job environment, so the .env.local loading path is what gets tested.
+      - name: Create .env.local from .env.example
+        run: |
+          cp .env.example .env.local
+          sed -i 's|^DATABASE_URL=.*|DATABASE_URL=postgresql://cinematch:cinematch@localhost:5432/cinematch|' .env.local
+
+      - name: Apply migrations twice and verify pgvector
+        run: npm run test:db
