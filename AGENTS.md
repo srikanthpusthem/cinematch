@@ -104,3 +104,8 @@ Srikanth still handles final merges and account/billing/Vercel clicks. Public
 release, paid services, commercial licensing and country expansion retain the
 explicit owner boundaries above. The lead reports outcomes, failures, risks and
 owner actions; it does not ask the owner to micromanage normal implementation.
+
+## Task-specific skills
+
+Use the compact [skill router](docs/skills.md) when its topic matches the task;
+read only the relevant skill and references. Existing project rules remain authoritative.

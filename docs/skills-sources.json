@@ -1,0 +1,142 @@
+[
+  {
+    "file": ".agents/skills/react-performance/references/async-cheap-condition-before-await.md",
+    "source": "https://github.com/vercel-labs/agent-skills/blob/063bee94c3f4df8453406c830b0a7df0f2860278/skills/react-best-practices/rules/async-cheap-condition-before-await.md",
+    "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+    "sha256": "03107c1f70a293cd58a8abc5474c5548e20ea4efdf01b6d45aae7ad0ac1cb32c",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/react-performance/references/async-parallel.md",
+    "source": "https://github.com/vercel-labs/agent-skills/blob/063bee94c3f4df8453406c830b0a7df0f2860278/skills/react-best-practices/rules/async-parallel.md",
+    "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+    "sha256": "6d2f841896279e976dfcdc1ac89e70771ac188baadfd43c096b5706cb838b961",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/react-performance/references/async-defer-await.md",
+    "source": "https://github.com/vercel-labs/agent-skills/blob/063bee94c3f4df8453406c830b0a7df0f2860278/skills/react-best-practices/rules/async-defer-await.md",
+    "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+    "sha256": "f3c142d090615abdcc99d31c123be37b31f0f1ed8d9ec9f7789a3bc6883ae0fb",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/react-performance/references/server-auth-actions.md",
+    "source": "https://github.com/vercel-labs/agent-skills/blob/063bee94c3f4df8453406c830b0a7df0f2860278/skills/react-best-practices/rules/server-auth-actions.md",
+    "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+    "sha256": "a2ca8aa102839251c7971ec784560fab943c20b36fe6f80365d4110c13260c23",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/react-performance/references/server-serialization.md",
+    "source": "https://github.com/vercel-labs/agent-skills/blob/063bee94c3f4df8453406c830b0a7df0f2860278/skills/react-best-practices/rules/server-serialization.md",
+    "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+    "sha256": "f4c7d68b29c82381baad059c4a7f09e868e71ec9c3115a26ad3ae7d24c0dfe1f",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/react-performance/references/bundle-dynamic-imports.md",
+    "source": "https://github.com/vercel-labs/agent-skills/blob/063bee94c3f4df8453406c830b0a7df0f2860278/skills/react-best-practices/rules/bundle-dynamic-imports.md",
+    "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+    "sha256": "401817a7369f315fc5a68a1095742ff7d53d0461906880dc9d64a41495ee1986",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/react-performance/references/rerender-derived-state-no-effect.md",
+    "source": "https://github.com/vercel-labs/agent-skills/blob/063bee94c3f4df8453406c830b0a7df0f2860278/skills/react-best-practices/rules/rerender-derived-state-no-effect.md",
+    "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+    "sha256": "cb11ec76f50aa7b6847269f02d79b120c889a30d9ecd2c1d578f75144419c77a",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/react-performance/references/server-no-shared-module-state.md",
+    "source": "https://github.com/vercel-labs/agent-skills/blob/063bee94c3f4df8453406c830b0a7df0f2860278/skills/react-best-practices/rules/server-no-shared-module-state.md",
+    "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+    "sha256": "4d869bf1cd2f1632e5ca4c0e64b1cf0e71c5f5a0f940bc8a22174d205e735ed7",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/react-performance/references/server-hoist-static-io.md",
+    "source": "https://github.com/vercel-labs/agent-skills/blob/063bee94c3f4df8453406c830b0a7df0f2860278/skills/react-best-practices/rules/server-hoist-static-io.md",
+    "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+    "sha256": "5abea4dd882b13661bd5f7dfb93f9e547d5f08176c61c448ade91b210ed5d49f",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/postgres-review/references/query-missing-indexes.md",
+    "source": "https://github.com/supabase/agent-skills/blob/551274ed2fe97c8fea1325f7ceb05803a542f8df/skills/supabase-postgres-best-practices/references/query-missing-indexes.md",
+    "revision": "551274ed2fe97c8fea1325f7ceb05803a542f8df",
+    "sha256": "91ad8b0ff4365704b4830a7f077c6f140f7140fd5d3ce5cd0b92b160cf9e25f1",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/postgres-review/references/query-composite-indexes.md",
+    "source": "https://github.com/supabase/agent-skills/blob/551274ed2fe97c8fea1325f7ceb05803a542f8df/skills/supabase-postgres-best-practices/references/query-composite-indexes.md",
+    "revision": "551274ed2fe97c8fea1325f7ceb05803a542f8df",
+    "sha256": "73e42424e671f0266e74fdb220db3196790f69fb43e2b19c7b9483eb4971b554",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/postgres-review/references/schema-foreign-key-indexes.md",
+    "source": "https://github.com/supabase/agent-skills/blob/551274ed2fe97c8fea1325f7ceb05803a542f8df/skills/supabase-postgres-best-practices/references/schema-foreign-key-indexes.md",
+    "revision": "551274ed2fe97c8fea1325f7ceb05803a542f8df",
+    "sha256": "7587713d12a65a212365459b3d39e4717d8a79e4073b10bd62f1054d8192c0dd",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/postgres-review/references/schema-constraints.md",
+    "source": "https://github.com/supabase/agent-skills/blob/551274ed2fe97c8fea1325f7ceb05803a542f8df/skills/supabase-postgres-best-practices/references/schema-constraints.md",
+    "revision": "551274ed2fe97c8fea1325f7ceb05803a542f8df",
+    "sha256": "90e8efda3e9e81095e642911ad4aae2809d160f29414338fa997253238f510f8",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/postgres-review/references/conn-pooling.md",
+    "source": "https://github.com/supabase/agent-skills/blob/551274ed2fe97c8fea1325f7ceb05803a542f8df/skills/supabase-postgres-best-practices/references/conn-pooling.md",
+    "revision": "551274ed2fe97c8fea1325f7ceb05803a542f8df",
+    "sha256": "88cf086bf98ba865d2e9d0579974e1366b14157619d6a93e7da77be91084e4a5",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/postgres-review/references/conn-prepared-statements.md",
+    "source": "https://github.com/supabase/agent-skills/blob/551274ed2fe97c8fea1325f7ceb05803a542f8df/skills/supabase-postgres-best-practices/references/conn-prepared-statements.md",
+    "revision": "551274ed2fe97c8fea1325f7ceb05803a542f8df",
+    "sha256": "174e9332fe3dda5c99b2b00159fb1915ae36c00bab3a7882c14e73e4344e946e",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/postgres-review/references/security-privileges.md",
+    "source": "https://github.com/supabase/agent-skills/blob/551274ed2fe97c8fea1325f7ceb05803a542f8df/skills/supabase-postgres-best-practices/references/security-privileges.md",
+    "revision": "551274ed2fe97c8fea1325f7ceb05803a542f8df",
+    "sha256": "095909274a4fb43df785d7144cf674eeb40284d2d45628f14af4108737b93663",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/postgres-review/references/monitor-explain-analyze.md",
+    "source": "https://github.com/supabase/agent-skills/blob/551274ed2fe97c8fea1325f7ceb05803a542f8df/skills/supabase-postgres-best-practices/references/monitor-explain-analyze.md",
+    "revision": "551274ed2fe97c8fea1325f7ceb05803a542f8df",
+    "sha256": "4cb67ffbf8e57f2e5b380b0beb4242528b513723ce314a2c2ffcf083bd4203d7",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/postgres-review/LICENSE",
+    "source": "https://github.com/supabase/agent-skills/blob/551274ed2fe97c8fea1325f7ceb05803a542f8df/LICENSE",
+    "revision": "551274ed2fe97c8fea1325f7ceb05803a542f8df",
+    "sha256": "b65e575eb4f04a13c187d64e958321298e2ab84d67aa8428819f362056ba292c",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/web-interface-review/references/command.md",
+    "source": "https://github.com/vercel-labs/web-interface-guidelines/blob/e3d624baaf29dc1fc645aff3e38f03e564d2d6b1/command.md",
+    "revision": "e3d624baaf29dc1fc645aff3e38f03e564d2d6b1",
+    "sha256": "5a775e6411f790f518dbc9c1fa7c50a89e6873502d9a3530a6eb223a590bcfe8",
+    "modified": false
+  },
+  {
+    "file": ".agents/skills/web-interface-review/LICENSE",
+    "source": "https://github.com/vercel-labs/web-interface-guidelines/blob/e3d624baaf29dc1fc645aff3e38f03e564d2d6b1/LICENSE",
+    "revision": "e3d624baaf29dc1fc645aff3e38f03e564d2d6b1",
+    "sha256": "6cd1609c9c12233507cdd2ce0d32e9a721e3c27494951be06b90090deeeb7af2",
+    "modified": false
+  }
+]
