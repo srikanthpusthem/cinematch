@@ -5,3 +5,6 @@ playwright-report
 test-results
 drizzle
 package-lock.json
+
+# Preserve exact pinned upstream reference bytes (docs/skills-sources.json).
+.agents/skills/*/references/
