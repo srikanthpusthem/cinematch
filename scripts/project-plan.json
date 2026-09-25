@@ -1,0 +1,296 @@
+{
+  "repo": "srikanthpusthem/cinematch",
+  "projectTitle": "CineMatch",
+  "milestones": [
+    {
+      "title": "M0 Foundation",
+      "description": "Repo, CI and preview deploys green; empty app live with owner verification."
+    },
+    {
+      "title": "M1 Catalog",
+      "description": "Trustworthy discoverable catalog: US provider correctness and freshness verified, with 20k+ movies and 5k+ series as coverage targets, not proof of quality."
+    },
+    {
+      "title": "M2 Recommender",
+      "description": "Useful, valid and diverse picks beat a documented baseline in reviewed cases; cold start and deterministic fallback work; latency and quota enforcement verified."
+    },
+    {
+      "title": "M3 Product UI",
+      "description": "Phone/laptop guest can reach useful picks within 60 seconds via optional quiz or cold start, edit answers and understand availability and reasons."
+    },
+    {
+      "title": "M4 Accounts and polish",
+      "description": "Optional sign-in sync, installable PWA and accessibility pass."
+    },
+    {
+      "title": "M5 Beta",
+      "description": "Twenty real users provide consented evidence on relevance, first-use speed and streaming accuracy; improve failures before calling the beta successful."
+    }
+  ],
+  "issues": [
+    {
+      "key": "foundation",
+      "milestone": "M0 Foundation",
+      "title": "M0: Foundation — repo scaffold, CI, empty app live",
+      "existingNumber": 3,
+      "lane": "Owner",
+      "blocked": true,
+      "criteria": "All M0 work merged with green CI; owner records successful main and PR preview URLs. Keep this umbrella issue open until the exit criteria pass."
+    },
+    {
+      "key": "coordination",
+      "milestone": "M0 Foundation",
+      "title": "M0: Shared agent coordination and reproducible GitHub tracking",
+      "existingNumber": 9,
+      "lane": "Astra",
+      "criteria": "Canonical shared rules, Claude/Grok pointers, repeatable dry-run setup, six milestones, 36 planned issues and a linked five-status board. Preserve existing issues and progress."
+    },
+    {
+      "key": "migration-setup",
+      "milestone": "M0 Foundation",
+      "title": "M0: Fix and verify database migration setup",
+      "lane": "Astra",
+      "criteria": "The documented .env.local workflow works on a clean checkout. Apply migrations twice against fresh pgvector Postgres and verify the vector extension without exposing credentials."
+    },
+    {
+      "key": "foundation-validation",
+      "milestone": "M0 Foundation",
+      "title": "M0: Verify foundation on phone and laptop",
+      "lane": "Astra",
+      "criteria": "Lint, formatting, typecheck, unit tests and production smoke pass. Exercise phone and desktop viewports; record CI and database migration verification evidence."
+    },
+    {
+      "key": "vercel-setup",
+      "milestone": "M0 Foundation",
+      "title": "M0: Owner setup — Vercel project, database and preview deployment",
+      "lane": "Owner",
+      "blocked": true,
+      "criteria": "Owner imports cinematch into Vercel, configures approved Postgres and secrets, verifies main and PR previews and supplies evidence. Agents document exact steps; account and billing clicks stay with owner. Keep deployment protected until the public release gate passes."
+    },
+    {
+      "key": "public-gate",
+      "milestone": "M0 Foundation",
+      "title": "M0: Document and enforce the public deployment gate",
+      "lane": "Astra",
+      "criteria": "Document per-session and per-IP LLM caps before any public link. Verify M0 exposes no paid inference route. Require protected deployment until quota enforcement is delivered and verified; include this gate in the owner deployment checklist."
+    },
+    {
+      "key": "catalog-schema",
+      "milestone": "M1 Catalog",
+      "title": "M1: Design catalog schema (movies, series, seasons, watch providers)",
+      "existingNumber": 4,
+      "lane": "Claude",
+      "criteria": "Numbered migrations model titles, seasons, genres, keywords and US availability with source timestamps. Test constraints and indexes against Postgres; no episode recommendations."
+    },
+    {
+      "key": "tmdb-client",
+      "milestone": "M1 Catalog",
+      "title": "M1: TMDB client with rate limiting",
+      "existingNumber": 5,
+      "lane": "Claude",
+      "criteria": "Server-only client with bounded retries, throttling, timeouts and redacted errors. Fixture tests cover pagination, rate limits, outages and malformed responses."
+    },
+    {
+      "key": "catalog-ingest",
+      "milestone": "M1 Catalog",
+      "title": "M1: Bulk-ingest 20k+ movies and 5k+ series with metadata",
+      "existingNumber": 6,
+      "lane": "Claude",
+      "criteria": "Resumable idempotent ingestion reaches 20k movies and 5k series, including overview, genres, keywords and season metadata. Report counts, failures and freshness without secrets."
+    },
+    {
+      "key": "availability",
+      "milestone": "M1 Catalog",
+      "title": "M1: US watch-provider availability + JustWatch/TMDB attribution",
+      "existingNumber": 7,
+      "lane": "Claude",
+      "criteria": "Persist attributed US provider availability and timestamps. Distinguish provider information from verified playback deep links. Meet TMDB and JustWatch attribution requirements."
+    },
+    {
+      "key": "catalog-cron",
+      "milestone": "M1 Catalog",
+      "title": "M1: Nightly catalog + availability refresh (Vercel Cron)",
+      "existingNumber": 8,
+      "lane": "Claude",
+      "criteria": "Authenticated nightly refresh has overlap prevention, bounded batches, resumable checkpoints and visible failures. Repeated runs are idempotent."
+    },
+    {
+      "key": "catalog-quality",
+      "milestone": "M1 Catalog",
+      "title": "M1: Catalog quality and availability freshness checks",
+      "lane": "Claude",
+      "criteria": "Repeatable audit reports counts, missing metadata, duplicate source IDs and stale availability. Document repair steps and demonstrate M1 exit counts."
+    },
+    {
+      "key": "catalog-read",
+      "milestone": "M1 Catalog",
+      "title": "M1: Catalog search and quiz read endpoints",
+      "lane": "Claude",
+      "criteria": "Typed title search and deterministic quiz seeds support movies and series, bounded pagination, validation and provider metadata. Fixture tests cover errors and empty results."
+    },
+    {
+      "key": "provider-interface",
+      "milestone": "M2 Recommender",
+      "title": "M2: Hosted embedding and reranker interfaces",
+      "lane": "Astra",
+      "criteria": "Swappable server-only interfaces have timeout, cancellation and validated responses. Deterministic fixtures enable offline work. No unapproved provider or spending."
+    },
+    {
+      "key": "title-embeddings",
+      "milestone": "M2 Recommender",
+      "title": "M2: Title embeddings and pgvector retrieval",
+      "lane": "Astra",
+      "criteria": "Resumable versioned embeddings of overview, genres and keywords use validated dimensions. Retrieve nearest 50 with a tested pgvector index strategy."
+    },
+    {
+      "key": "taste-vector",
+      "milestone": "M2 Recommender",
+      "title": "M2: Guest taste vector and feedback updates",
+      "lane": "Astra",
+      "criteria": "Average valid seed embeddings with documented weighting; explicit likes/dislikes adjust bounded taste preferences, while watched only suppresses repeats unless accompanied by a rating. Treat skips as weak/ambiguous signals. Support zero-seed cold start. Tests distinguish each event, reject invalid vectors and prevent repeated-event drift."
+    },
+    {
+      "key": "hard-filters",
+      "milestone": "M2 Recommender",
+      "title": "M2: Recommendation hard filters and exhaustion behavior",
+      "lane": "Astra",
+      "criteria": "Apply US services, explicit genre exclusions, format, length and watched exclusions BEFORE limiting the eligible retrieval pool, or use tested adaptive overfetch. Define length boundaries. Never silently relax constraints; explain shortages and ask which constraint to loosen. Test sparse service/genre combinations and cold-start fallback."
+    },
+    {
+      "key": "rerank",
+      "milestone": "M2 Recommender",
+      "title": "M2: Candidate-only mood reranking and explanations",
+      "lane": "Astra",
+      "criteria": "Rank only eligible candidate IDs using explicit taste and mood signals, diversify near-duplicate franchises/genres, and return up to five distinct choices. Ground explanations in catalog metadata and user answers; never invent facts. Compare with deterministic baseline. Reject hallucinated IDs and use tested deterministic fallback on timeout, outage or invalid output."
+    },
+    {
+      "key": "recommendation-api",
+      "milestone": "M2 Recommender",
+      "title": "M2: Recommendation API with enforced LLM budgets",
+      "lane": "Astra",
+      "criteria": "Shared concurrency-safe session and IP quotas precede every paid embedding/rerank call, bound retries and fail closed. Tests prove rejected requests make zero provider calls. Typed API supports show-more and fixtures."
+    },
+    {
+      "key": "offline-eval",
+      "milestone": "M2 Recommender",
+      "title": "M2: Thirty-case recommendation evaluation and latency",
+      "lane": "Astra",
+      "criteria": "Create at least 30 hand-reviewed cases spanning cold start, niche taste, mainstream taste, sparse services, exclusions and movies/series. Compare ranking to a simple deterministic baseline with documented rubrics; report hard-filter validity, availability freshness, diversity, explanation faithfulness, latency p50/p95 and failure rate. Quality claims require measured evidence, not just sensible-looking examples."
+    },
+    {
+      "key": "ui-contract",
+      "milestone": "M3 Product UI",
+      "title": "M3: Four-screen shell and mock API contract",
+      "lane": "Grok",
+      "criteria": "Typed mock contract supports zero-seed cold start, optional 3-5 title quiz, loading, empty and error states. Four compact steps preserve answers and allow back/edit/skip. Quiz displays seed titles; only results display recommendations. Design one clear best match with four alternatives and a visible explanation of why it fits."
+    },
+    {
+      "key": "services-screen",
+      "milestone": "M3 Product UI",
+      "title": "M3: Streaming services selection screen",
+      "lane": "Grok",
+      "criteria": "Accessible multi-select grid; skipping defaults to all services. Persist selection and test keyboard and touch at phone and desktop sizes."
+    },
+    {
+      "key": "taste-screen",
+      "milestone": "M3 Product UI",
+      "title": "M3: Taste quiz and avoided genres screen",
+      "lane": "Grok",
+      "criteria": "Optional searchable visual quiz accepts 3-5 favorite titles when used, or a clear skip for cold start; avoid forcing unfamiliar titles. Accessible selections and editable genre exclusions. Test missing posters, errors, skip and changing prior selections."
+    },
+    {
+      "key": "mood-screen",
+      "milestone": "M3 Product UI",
+      "title": "M3: Mood, format and length screen",
+      "lane": "Grok",
+      "criteria": "Five moods and movie/series-specific length choices persist. Format changes discard incompatible length settings. Keyboard and phone tests pass."
+    },
+    {
+      "key": "results-screen",
+      "milestone": "M3 Product UI",
+      "title": "M3: Five-pick results and streaming links",
+      "lane": "Grok",
+      "criteria": "Present one best match plus up to four alternatives with grounded reasons, runtime/episode commitment, selected US streaming providers and freshness. Separate subscription availability from rent/buy; no false playback-deep-link claims. Accessible actions and clear shortage/unavailable states; never invent results."
+    },
+    {
+      "key": "guest-feedback",
+      "milestone": "M3 Product UI",
+      "title": "M3: Guest persistence and result feedback",
+      "lane": "Grok",
+      "criteria": "Versioned local storage restores guest preferences. Watched suppresses repeats without implying like; explicit like/dislike events update taste; show-more/skip is a weak signal. Undo feedback, edit preferences and handle corruption/offline state. Events are idempotent and collect only necessary data."
+    },
+    {
+      "key": "flow-e2e",
+      "milestone": "M3 Product UI",
+      "title": "M3: Full guest recommendation journey tests",
+      "lane": "Grok",
+      "criteria": "Phone and laptop Playwright cover both optional-quiz and zero-seed guest paths, filters, back/edit, undo, reload, errors and unavailable streaming links without accounts. Measure time to first useful result, interaction count and abandonment in consented usability sessions; target first recommendation within 60 seconds."
+    },
+    {
+      "key": "auth",
+      "milestone": "M4 Accounts and polish",
+      "title": "M4: Optional Auth.js sign-in",
+      "lane": "Unassigned",
+      "criteria": "Owner configures approved auth provider. Sign-in remains optional; secure sessions, sign-out and guest continuity tested without secret exposure."
+    },
+    {
+      "key": "sync",
+      "milestone": "M4 Accounts and polish",
+      "title": "M4: Guest-to-account merge and cross-device sync",
+      "lane": "Unassigned",
+      "criteria": "Idempotent conflict-aware merge preserves preferences and feedback. Test two-device conflicts and cross-account access rejection."
+    },
+    {
+      "key": "pwa",
+      "milestone": "M4 Accounts and polish",
+      "title": "M4: Installable PWA and safe offline behavior",
+      "lane": "Unassigned",
+      "criteria": "Manifest, icons and installation verified. Safe offline shell and update strategy; no credential or private recommendation caching."
+    },
+    {
+      "key": "accessibility",
+      "milestone": "M4 Accounts and polish",
+      "title": "M4: Accessibility and responsive usability pass",
+      "lane": "Unassigned",
+      "criteria": "Check keyboard, focus, screen-reader labels, contrast, reduced motion and touch targets across full flow. Fix actionable findings and record evidence."
+    },
+    {
+      "key": "privacy",
+      "milestone": "M4 Accounts and polish",
+      "title": "M4: Privacy, deletion and production readiness",
+      "lane": "Unassigned",
+      "criteria": "Document stored data and retention. Implement deletion and redacted logging; validate quota and error behavior before public use."
+    },
+    {
+      "key": "availability-decision",
+      "milestone": "M5 Beta",
+      "title": "M5: Owner decision — availability source and commercial terms",
+      "lane": "Owner",
+      "blocked": true,
+      "criteria": "Research current official TMDB/JustWatch, Watchmode and Streaming Availability API terms, commercial use, deep links, coverage and prices. Recommend with sources. Owner decides before M5; do not purchase or switch providers without approval."
+    },
+    {
+      "key": "beta-cohort",
+      "milestone": "M5 Beta",
+      "title": "M5: Recruit and onboard twenty beta users",
+      "lane": "Owner",
+      "blocked": true,
+      "criteria": "Owner approves outreach and consent. Twenty real users complete the flow; record anonymized evidence and service coverage without fabricated results."
+    },
+    {
+      "key": "beta-feedback",
+      "milestone": "M5 Beta",
+      "title": "M5: Beta feedback and recommendation quality report",
+      "lane": "Unassigned",
+      "criteria": "With consent, measure time to first useful recommendation, which picks users would watch, streaming-link accuracy, reasons for rejection and return-session improvement. Compare personalized ranking with the deterministic baseline. Triage failures into linked issues and report real twenty-user evidence, uncertainties and prioritised fixes."
+    },
+    {
+      "key": "beta-release",
+      "milestone": "M5 Beta",
+      "title": "M5: Beta release review and operational checklist",
+      "lane": "Owner",
+      "blocked": true,
+      "criteria": "CI and previews green. Owner approves public deployment only after quota, commercial, privacy and accessibility gates. Document rollback and retain US-only scope unless owner explicitly changes it."
+    }
+  ]
+}
