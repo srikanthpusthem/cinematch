@@ -30,7 +30,7 @@ Fill in `DATABASE_URL` in `.env.local` (the docker-compose default is shown as a
 npm run db:migrate
 ```
 
-`TMDB_API_KEY` and `LLM_API_KEY` aren't used yet in M0 — they're placeholders for M1/M2.
+`TMDB_API_KEY` is read by the server-only TMDB client in `src/tmdb/` (v3 API key or v4 read access token). It isn't needed for `npm run test`, which uses fixtures. `LLM_API_KEY` is a placeholder for M2.
 
 ## Running the app
 
