@@ -31,7 +31,16 @@ export function resolveDatabaseUrl({
     );
   }
 
-  const fromFile = parseEnv(readFileSync(envFile, "utf8")).DATABASE_URL?.trim();
+  const contents = readFileSync(envFile, "utf8");
+  if (hasTruncatingHash(contents)) {
+    throw new Error(
+      `DATABASE_URL in ${ENV_FILE} contains an unquoted "#", which starts a ` +
+        'comment and truncates the value. Wrap the value in quotes ("...") ' +
+        "or percent-encode it as %23.",
+    );
+  }
+
+  const fromFile = parseEnv(contents).DATABASE_URL?.trim();
   if (!fromFile) {
     throw new Error(
       `DATABASE_URL is empty in ${ENV_FILE}. ` +
@@ -39,4 +48,17 @@ export function resolveDatabaseUrl({
     );
   }
   return fromFile;
+}
+
+/**
+ * parseEnv treats any unquoted "#" as a comment start, so a password like
+ * `p#ss` would be silently truncated to a still non-empty value. Flag a "#"
+ * glued to the value; `URL # comment` (whitespace before "#") is fine.
+ * Uses the last DATABASE_URL line, matching parseEnv's last-wins behavior.
+ */
+function hasTruncatingHash(contents: string): boolean {
+  const lines = contents.match(/^\s*(?:export\s+)?DATABASE_URL\s*=.*$/gm);
+  const raw = lines?.at(-1)?.split("=").slice(1).join("=").trim();
+  if (!raw || /^["'`]/.test(raw)) return false;
+  return /[^\s#]#/.test(raw);
 }

@@ -70,4 +70,27 @@ describe("resolveDatabaseUrl", () => {
       /DATABASE_URL is empty/,
     );
   });
+
+  it("rejects an unquoted # that would truncate the value", () => {
+    writeEnvFile("DATABASE_URL=postgresql://u:p#ss@localhost:5432/db\n");
+    expect(() => resolveDatabaseUrl({ cwd, env: {} })).toThrow(/unquoted "#"/);
+  });
+
+  it("accepts a # inside a quoted value", () => {
+    const url = "postgresql://u:p#ss@localhost:5432/db";
+    writeEnvFile(`DATABASE_URL="${url}"\n`);
+    expect(resolveDatabaseUrl({ cwd, env: {} })).toBe(url);
+  });
+
+  it("allows a trailing comment after whitespace", () => {
+    writeEnvFile(`DATABASE_URL=${FILE_URL} # local docker\n`);
+    expect(resolveDatabaseUrl({ cwd, env: {} })).toBe(FILE_URL);
+  });
+
+  it("ignores # in comments and other variables", () => {
+    writeEnvFile(
+      `# DATABASE_URL=a#b\nTMDB_API_KEY=x#y\nDATABASE_URL=${FILE_URL}\n`,
+    );
+    expect(resolveDatabaseUrl({ cwd, env: {} })).toBe(FILE_URL);
+  });
 });
