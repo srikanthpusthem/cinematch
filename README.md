@@ -1,6 +1,6 @@
 # CineMatch
 
-A web app (phone and laptop) that recommends a movie or series in under two minutes, for anyone, with no watch history required. See [`CLAUDE.md`](./CLAUDE.md) for the full product summary, stack and working agreements.
+A web app (phone and laptop) that recommends a movie or series in under two minutes, for anyone, with no watch history required. See [`AGENTS.md`](./AGENTS.md) for the full product summary, stack, working agreements, and the protocol multiple AI agents follow when picking up issues from the GitHub Projects board.
 
 This is the **M0 (Foundation)** scaffold: an empty app with CI, tooling, and DB migrations wired up. No catalog data or recommendation logic yet — that's M1 and beyond.
 
@@ -69,4 +69,15 @@ Migrations live in `drizzle/` and are managed with [drizzle-kit](https://orm.dri
 ```bash
 npm run db:generate   # generate a migration from schema changes in src/db/schema.ts
 npm run db:migrate     # apply pending migrations
+```
+
+## Project tracking setup
+
+`scripts/setup-github-project.sh` is a one-time, idempotent script that creates the repo's labels, milestones (M0-M5), the 36 planned issues, and a GitHub Projects board with every issue added — see `AGENTS.md` for how the board is used day to day. It needs the [`gh` CLI](https://cli.github.com/) authenticated with the `project` scope (not available to this AI agent, so it hasn't been run yet):
+
+```bash
+brew install gh
+gh auth login
+gh auth refresh -s project
+OWNER=srikanthpusthem REPO=strip-down ./scripts/setup-github-project.sh   # or DRY_RUN=1 first
 ```

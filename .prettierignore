@@ -5,3 +5,4 @@ playwright-report
 test-results
 drizzle
 package-lock.json
+*.sh
