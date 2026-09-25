@@ -1,0 +1,15 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cinematch
+      POSTGRES_PASSWORD: cinematch
+      POSTGRES_DB: cinematch
+    ports:
+      - "5432:5432"
+    volumes:
+      - cinematch-db:/var/lib/postgresql/data
+
+volumes:
+  cinematch-db:
