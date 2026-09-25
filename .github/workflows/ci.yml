@@ -30,6 +30,9 @@ jobs:
 
       - run: npm run test
 
+      - name: Verify GitHub tracking setup safety
+        run: node --test scripts/setup-github-project.test.mjs
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
