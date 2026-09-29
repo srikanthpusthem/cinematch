@@ -84,6 +84,7 @@ export type GuestAnswers = {
   servicesSkipped: boolean;
   seedIds: string[];
   avoidedGenres: AvoidableGenre[];
+  /** True when the taste quiz was explicitly skipped (vs continuing with zero seeds). */
   tasteSkipped: boolean;
   mood: Mood | null;
   format: WatchFormat | null;
