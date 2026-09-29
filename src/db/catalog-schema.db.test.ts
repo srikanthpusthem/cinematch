@@ -152,6 +152,7 @@ describe("catalog schema: structure", () => {
       "title_genres_title_id_titles_id_fk",
       "title_keywords_keyword_id_keywords_id_fk",
       "title_keywords_title_id_titles_id_fk",
+      "title_lifecycle_title_id_titles_id_fk",
       "title_offers_availability_fkey",
       "title_offers_provider_id_watch_providers_id_fk",
     ]);
