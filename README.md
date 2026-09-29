@@ -66,7 +66,9 @@ All of the above, plus the database migration check below, run in CI on every pu
 
 ## Database migrations
 
-Migrations live in `drizzle/` and are managed with [drizzle-kit](https://orm.drizzle.team/kit-docs/overview):
+Migrations live in `drizzle/` and are managed with [drizzle-kit](https://orm.drizzle.team/kit-docs/overview). The catalog model, constraints and indexes are documented in [docs/catalog-schema.md](docs/catalog-schema.md).
+
+Commands:
 
 ```bash
 npm run db:generate   # generate a migration from schema changes in src/db/schema.ts
