@@ -1,3 +1,11 @@
+import {
+  MOVIE_EPIC_MIN_MINUTES,
+  MOVIE_SHORT_MAX_MINUTES,
+  SERIES_LONG_RUNNING_MIN_SEASONS,
+  SERIES_ONE_SEASON_COUNT,
+  SERIES_SHORT_EPISODE_MAX_MINUTES,
+} from "@/lib/recommendation-length";
+
 import type {
   ConstraintReason,
   EvaluationCase,
@@ -125,6 +133,11 @@ function validateCase(
         `${prefix}: candidate ${id} has no expected classification`,
       );
     }
+    const title = titles.get(id);
+    const metadataProblem = title
+      ? missingLengthMetadata(evaluationCase, title)
+      : null;
+    if (metadataProblem) problems.push(`${prefix}: ${metadataProblem}`);
   }
 
   for (const id of eligibleIds) {
@@ -185,27 +198,73 @@ export function hardConstraintViolations(
     violations.push("watched");
   }
   if (title.format === "movie" && inputs.movieLength !== undefined) {
-    if (inputs.movieLength === "under-100" && title.runtimeMinutes! >= 100) {
+    if (
+      inputs.movieLength === "under-100" &&
+      (title.runtimeMinutes == null ||
+        title.runtimeMinutes > MOVIE_SHORT_MAX_MINUTES)
+    ) {
       violations.push("movie-length");
     }
-    if (inputs.movieLength === "epic" && title.runtimeMinutes! < 150) {
+    if (
+      inputs.movieLength === "epic" &&
+      (title.runtimeMinutes == null ||
+        title.runtimeMinutes < MOVIE_EPIC_MIN_MINUTES)
+    ) {
       violations.push("movie-length");
     }
   }
   if (title.format === "series" && inputs.seriesLength !== undefined) {
     if (
       inputs.seriesLength === "short-episodes" &&
-      title.episodeRuntimeMinutes! > 30
+      (title.episodeRuntimeMinutes == null ||
+        title.episodeRuntimeMinutes > SERIES_SHORT_EPISODE_MAX_MINUTES)
     ) {
       violations.push("series-length");
     }
-    if (inputs.seriesLength === "one-season" && title.seasons !== 1) {
+    if (
+      inputs.seriesLength === "one-season" &&
+      title.seasons !== SERIES_ONE_SEASON_COUNT
+    ) {
       violations.push("series-length");
     }
-    if (inputs.seriesLength === "long-running" && title.seasons! < 4) {
+    if (
+      inputs.seriesLength === "long-running" &&
+      (title.seasons == null || title.seasons < SERIES_LONG_RUNNING_MIN_SEASONS)
+    ) {
       violations.push("series-length");
     }
   }
 
   return violations;
+}
+
+function missingLengthMetadata(
+  evaluationCase: EvaluationCase,
+  title: EvaluationTitle,
+): string | null {
+  const { inputs } = evaluationCase;
+  if (
+    title.format === "movie" &&
+    inputs.movieLength !== undefined &&
+    inputs.movieLength !== "any" &&
+    title.runtimeMinutes == null
+  ) {
+    return `candidate ${title.id} requires runtimeMinutes for ${inputs.movieLength}`;
+  }
+  if (
+    title.format === "series" &&
+    inputs.seriesLength === "short-episodes" &&
+    title.episodeRuntimeMinutes == null
+  ) {
+    return `candidate ${title.id} requires episodeRuntimeMinutes for short-episodes`;
+  }
+  if (
+    title.format === "series" &&
+    (inputs.seriesLength === "one-season" ||
+      inputs.seriesLength === "long-running") &&
+    title.seasons == null
+  ) {
+    return `candidate ${title.id} requires seasons for ${inputs.seriesLength}`;
+  }
+  return null;
 }
