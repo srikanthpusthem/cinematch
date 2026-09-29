@@ -3,7 +3,17 @@ import type { Mood, SeedTitle, ServiceId, WatchFormat } from "./types";
 export type CatalogOffer = {
   serviceId: ServiceId;
   access: "subscription" | "rent" | "buy";
+  /** ISO timestamp; omit to let mock-api default to a fresh MOCK_NOW-relative value. */
+  freshnessCheckedAt?: string;
+  /** Fixture-only verified HTTPS deep-link. Never invent in UI. */
+  verifiedWatchUrl?: string;
 };
+
+/** Fresh mock check: one day before MOCK_NOW. */
+export const FIXTURE_FRESH_CHECKED_AT = "2026-09-27T18:00:00.000Z";
+
+/** Deliberately stale mock check: ten days before MOCK_NOW. */
+export const FIXTURE_STALE_CHECKED_AT = "2026-09-18T18:00:00.000Z";
 
 /** Fixed mock catalog. Not live availability. */
 export type CatalogTitle = {
@@ -86,7 +96,14 @@ export const CATALOG: CatalogTitle[] = [
     minutes: 123,
     genres: ["Comedy", "Romance"],
     moods: ["comfort"],
-    offers: [{ serviceId: "prime", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "prime",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/prime/rec-about-time",
+      },
+    ],
   },
   {
     id: "rec-wilderpeople",
@@ -96,7 +113,14 @@ export const CATALOG: CatalogTitle[] = [
     minutes: 97,
     genres: ["Comedy"],
     moods: ["comfort", "laugh"],
-    offers: [{ serviceId: "prime", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "prime",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/prime/rec-wilderpeople",
+      },
+    ],
   },
   {
     id: "rec-paddington",
@@ -106,7 +130,14 @@ export const CATALOG: CatalogTitle[] = [
     minutes: 104,
     genres: ["Comedy"],
     moods: ["comfort", "laugh"],
-    offers: [{ serviceId: "netflix", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "netflix",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/netflix/rec-paddington",
+      },
+    ],
   },
   {
     id: "rec-school",
@@ -116,7 +147,14 @@ export const CATALOG: CatalogTitle[] = [
     minutes: 109,
     genres: ["Comedy"],
     moods: ["comfort", "laugh"],
-    offers: [{ serviceId: "paramount", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "paramount",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/paramount/rec-school",
+      },
+    ],
   },
   {
     id: "rec-singin",
@@ -126,7 +164,14 @@ export const CATALOG: CatalogTitle[] = [
     minutes: 103,
     genres: ["Comedy"],
     moods: ["comfort"],
-    offers: [{ serviceId: "max", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "max",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/max/rec-singin",
+      },
+    ],
   },
   {
     id: "rec-nice-guys",
@@ -136,7 +181,14 @@ export const CATALOG: CatalogTitle[] = [
     minutes: 116,
     genres: ["Comedy"],
     moods: ["laugh"],
-    offers: [{ serviceId: "max", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "max",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/max/rec-nice-guys",
+      },
+    ],
   },
   {
     id: "rec-game-night",
@@ -146,7 +198,14 @@ export const CATALOG: CatalogTitle[] = [
     minutes: 100,
     genres: ["Comedy"],
     moods: ["laugh"],
-    offers: [{ serviceId: "hulu", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "hulu",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/hulu/rec-game-night",
+      },
+    ],
   },
   {
     id: "rec-safety",
@@ -156,7 +215,14 @@ export const CATALOG: CatalogTitle[] = [
     minutes: 86,
     genres: ["Comedy"],
     moods: ["comfort"],
-    offers: [{ serviceId: "netflix", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "netflix",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/netflix/rec-safety",
+      },
+    ],
   },
   {
     id: "rec-blade-runner",
@@ -167,8 +233,17 @@ export const CATALOG: CatalogTitle[] = [
     genres: ["Science Fiction"],
     moods: ["think"],
     offers: [
-      { serviceId: "apple", access: "subscription" },
-      { serviceId: "prime", access: "rent" },
+      {
+        serviceId: "apple",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/apple/rec-blade-runner",
+      },
+      {
+        serviceId: "prime",
+        access: "rent",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+      },
     ],
   },
   {
@@ -179,7 +254,14 @@ export const CATALOG: CatalogTitle[] = [
     minutes: 108,
     genres: ["Science Fiction"],
     moods: ["think"],
-    offers: [{ serviceId: "max", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "max",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/max/rec-ex-machina",
+      },
+    ],
   },
   {
     id: "rec-bear",
@@ -190,7 +272,14 @@ export const CATALOG: CatalogTitle[] = [
     seasons: 4,
     genres: ["Comedy"],
     moods: ["comfort"],
-    offers: [{ serviceId: "hulu", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "hulu",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/hulu/rec-bear",
+      },
+    ],
   },
   {
     id: "rec-fleabag",
@@ -201,7 +290,14 @@ export const CATALOG: CatalogTitle[] = [
     seasons: 2,
     genres: ["Comedy"],
     moods: ["cry"],
-    offers: [{ serviceId: "prime", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "prime",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/prime/rec-fleabag",
+      },
+    ],
   },
   {
     id: "rec-chernobyl",
@@ -212,7 +308,14 @@ export const CATALOG: CatalogTitle[] = [
     seasons: 1,
     genres: ["Drama"],
     moods: ["think"],
-    offers: [{ serviceId: "hulu", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "hulu",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/hulu/rec-chernobyl",
+      },
+    ],
   },
   {
     id: "rec-office",
@@ -223,6 +326,13 @@ export const CATALOG: CatalogTitle[] = [
     seasons: 9,
     genres: ["Comedy"],
     moods: ["comfort", "laugh"],
-    offers: [{ serviceId: "peacock", access: "subscription" }],
+    offers: [
+      {
+        serviceId: "peacock",
+        access: "subscription",
+        freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+        verifiedWatchUrl: "https://watch.example/peacock/rec-office",
+      },
+    ],
   },
 ];
