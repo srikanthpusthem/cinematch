@@ -1,1 +1,3 @@
-$file:/workspace/cinematch/src/components/guest-flow.tsx
+"use client";
+
+export { GuestFlow } from "./guest-flow/app";
