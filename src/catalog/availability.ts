@@ -186,7 +186,8 @@ export function createAvailabilityStore(db: CatalogDb): AvailabilityStore {
         .select({
           titles: count(titles.id),
           checked: count(titleAvailability.titleId),
-          stale: sql<number>`count(*) filter (where ${titleAvailability.fetchedAt} < ${staleBefore})::int`,
+          // lt() maps the Date through the column type; a raw Date param would not be.
+          stale: sql<number>`count(*) filter (where ${lt(titleAvailability.fetchedAt, staleBefore)})::int`,
           oldest: min(titleAvailability.fetchedAt),
           newest: max(titleAvailability.fetchedAt),
         })

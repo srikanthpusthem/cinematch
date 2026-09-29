@@ -76,9 +76,10 @@ async function offersOf(titleId: number) {
 }
 
 async function checkedAt(titleId: number): Promise<Date | null> {
-  const [row] = await sql<{ fetched_at: Date }[]>`
+  const [row] = await sql<{ fetched_at: string }[]>`
     select fetched_at from title_availability where title_id = ${titleId}`;
-  return row?.fetched_at ?? null;
+  // Drizzle sets this shared client to return timestamps as strings.
+  return row ? new Date(row.fetched_at) : null;
 }
 
 beforeAll(async () => {
