@@ -169,8 +169,8 @@ describe("applyHardFilters", () => {
     [series("31m", { episodeRuntimeMinutes: 31 }), "short-episodes", false],
     [series("one", { seasonCount: 1 }), "one-season", true],
     [series("two", { seasonCount: 2 }), "one-season", false],
-    [series("two", { seasonCount: 2 }), "long-running", false],
-    [series("three", { seasonCount: 3 }), "long-running", true],
+    [series("three", { seasonCount: 3 }), "long-running", false],
+    [series("four", { seasonCount: 4 }), "long-running", true],
   ] as const)(
     "applies series boundary for %s and %s",
     (candidate, category, expected) => {

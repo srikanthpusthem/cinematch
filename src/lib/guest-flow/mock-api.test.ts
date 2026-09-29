@@ -1,7 +1,13 @@
-import { describe, expect, it } from "vitest";
-import { QUIZ_SEEDS } from "./fixtures";
-import { mockRecommend } from "./mock-api";
-import { EMPTY_ANSWERS, tasteSelectionError, type GuestAnswers } from "./types";
+import { describe, expect, it, vi } from "vitest";
+import { CATALOG, QUIZ_SEEDS } from "./fixtures";
+import { matchingSeedGenre, mockRecommend } from "./mock-api";
+import {
+  EMPTY_ANSWERS,
+  movieLengthMatches,
+  seriesLengthMatches,
+  tasteSelectionError,
+  type GuestAnswers,
+} from "./types";
 
 const coldComfortMovies: GuestAnswers = {
   ...EMPTY_ANSWERS,
@@ -26,6 +32,44 @@ describe("tasteSelectionError", () => {
   });
 });
 
+describe("matchingSeedGenre", () => {
+  it("returns the shared genre used by eligibility and reason text", () => {
+    const title = CATALOG.find((item) => item.title === "About Time");
+    expect(title).toBeDefined();
+    if (!title) return;
+    expect(
+      matchingSeedGenre(title, {
+        ...coldComfortMovies,
+        tasteSkipped: false,
+        seedIds: ["seed-budapest", "seed-parks", "seed-booksmart"],
+      }),
+    ).toBe("Comedy");
+  });
+
+  it("returns undefined when no quiz seeds were chosen", () => {
+    const title = CATALOG.find((item) => item.title === "About Time");
+    expect(title).toBeDefined();
+    if (!title) return;
+    expect(matchingSeedGenre(title, coldComfortMovies)).toBeUndefined();
+  });
+});
+
+describe("canonical length boundaries", () => {
+  it("matches movie boundaries at 99/100 and 149/150 minutes", () => {
+    expect(movieLengthMatches(99, "under-100")).toBe(true);
+    expect(movieLengthMatches(100, "under-100")).toBe(false);
+    expect(movieLengthMatches(149, "epic")).toBe(false);
+    expect(movieLengthMatches(150, "epic")).toBe(true);
+  });
+
+  it("matches series boundaries at 30/31 minutes and 3/4 seasons", () => {
+    expect(seriesLengthMatches(30, 1, "short-episodes")).toBe(true);
+    expect(seriesLengthMatches(31, 1, "short-episodes")).toBe(false);
+    expect(seriesLengthMatches(45, 3, "long-running")).toBe(false);
+    expect(seriesLengthMatches(45, 4, "long-running")).toBe(true);
+  });
+});
+
 describe("mockRecommend", () => {
   it("returns a cold-start best match and four alternatives", async () => {
     const result = await mockRecommend(coldComfortMovies);
@@ -35,6 +79,7 @@ describe("mockRecommend", () => {
     expect(result.best.role).toBe("recommendation");
     expect(result.best.title).toBe("About Time");
     expect(result.best.reason).toMatch(/Cold start/);
+    expect(result.best.reason).toMatch(/taste quiz was skipped/);
     expect(result.best.reason).toMatch(/Included with Prime Video/);
     expect(result.alternatives).toHaveLength(4);
     expect(result.alternatives.map((pick) => pick.title)).toEqual([
@@ -49,6 +94,24 @@ describe("mockRecommend", () => {
     expect(
       titles.some((title) => QUIZ_SEEDS.some((seed) => seed.title === title)),
     ).toBe(false);
+  });
+
+  it("distinguishes skipped quiz from continuing with zero titles", async () => {
+    const skipped = await mockRecommend(coldComfortMovies);
+    expect(skipped.status).toBe("ok");
+    if (skipped.status === "ok") {
+      expect(skipped.best.reason).toMatch(/taste quiz was skipped/);
+    }
+
+    const choseNone = await mockRecommend({
+      ...coldComfortMovies,
+      tasteSkipped: false,
+    });
+    expect(choseNone.status).toBe("ok");
+    if (choseNone.status === "ok") {
+      expect(choseNone.best.reason).toMatch(/no quiz titles were chosen/);
+      expect(choseNone.best.reason).not.toMatch(/taste quiz was skipped/);
+    }
   });
 
   it("grounds seeded picks in shared quiz genres", async () => {
@@ -135,6 +198,33 @@ describe("mockRecommend", () => {
     expect(result.status).toBe("error");
     if (result.status === "error") {
       expect(result.message).toMatch(/3 to 5/);
+    }
+  });
+
+  it("aborts immediately when AbortSignal fires during delay", async () => {
+    vi.useFakeTimers();
+    try {
+      const controller = new AbortController();
+      const pending = mockRecommend(coldComfortMovies, {
+        delayMs: 500,
+        signal: controller.signal,
+      });
+      const outcome = pending.then(
+        (value) => ({ status: "fulfilled" as const, value }),
+        (reason: unknown) => ({ status: "rejected" as const, reason }),
+      );
+
+      await vi.advanceTimersByTimeAsync(100);
+      controller.abort();
+      await vi.advanceTimersByTimeAsync(0);
+
+      const settled = await outcome;
+      expect(settled.status).toBe("rejected");
+      if (settled.status !== "rejected") return;
+      expect(settled.reason).toBeInstanceOf(DOMException);
+      expect((settled.reason as DOMException).name).toBe("AbortError");
+    } finally {
+      vi.useRealTimers();
     }
   });
 });
