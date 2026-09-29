@@ -1,3 +1,11 @@
+import {
+  MOVIE_EPIC_MIN_MINUTES,
+  MOVIE_SHORT_MAX_MINUTES,
+  SERIES_LONG_RUNNING_MIN_SEASONS,
+  SERIES_ONE_SEASON_COUNT,
+  SERIES_SHORT_EPISODE_MAX_MINUTES,
+} from "@/lib/recommendation-length";
+
 export type MediaFormat = "movie" | "series";
 
 export interface RecommendationCandidate {
@@ -11,16 +19,7 @@ export interface RecommendationCandidate {
   seasonCount?: number | null;
 }
 
-/**
- * Exact v1 length boundaries:
- * - movie under 100: runtime < 100 minutes
- * - movie epic: runtime >= 150 minutes
- * - series short episodes: episode runtime <= 30 minutes
- * - series one season: exactly 1 season
- * - series long-running: at least 3 seasons
- *
- * "Any" length is represented by omitting `length`.
- */
+/** Uses the canonical boundaries in `@/lib/recommendation-length`. */
 export type LengthConstraint =
   | { format: "movie"; category: "under-100" | "epic" }
   | {
@@ -85,20 +84,20 @@ function matchesLength(
   if (length.format === "movie") {
     if (candidate.runtimeMinutes == null) return false;
     return length.category === "under-100"
-      ? candidate.runtimeMinutes < 100
-      : candidate.runtimeMinutes >= 150;
+      ? candidate.runtimeMinutes <= MOVIE_SHORT_MAX_MINUTES
+      : candidate.runtimeMinutes >= MOVIE_EPIC_MIN_MINUTES;
   }
 
   if (length.category === "short-episodes") {
     return (
       candidate.episodeRuntimeMinutes != null &&
-      candidate.episodeRuntimeMinutes <= 30
+      candidate.episodeRuntimeMinutes <= SERIES_SHORT_EPISODE_MAX_MINUTES
     );
   }
   if (candidate.seasonCount == null) return false;
   return length.category === "one-season"
-    ? candidate.seasonCount === 1
-    : candidate.seasonCount >= 3;
+    ? candidate.seasonCount === SERIES_ONE_SEASON_COUNT
+    : candidate.seasonCount >= SERIES_LONG_RUNNING_MIN_SEASONS;
 }
 
 function isEligible(
