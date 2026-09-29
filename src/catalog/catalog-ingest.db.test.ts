@@ -22,6 +22,7 @@ const BASE = 9_000_000;
 const T0 = new Date("2026-09-29T00:00:00Z");
 
 let sql: postgres.Sql;
+let connected = false;
 let store: CatalogStore;
 
 // Test-range ids for titles, genres and keywords.
@@ -71,14 +72,16 @@ beforeAll(async () => {
     onnotice: () => {},
   });
   await migrate(drizzle(sql), { migrationsFolder: path.join(root, "drizzle") });
+  connected = true;
   store = createCatalogStore(drizzle(sql, { schema }));
 });
 
 beforeEach(cleanup);
 
 afterAll(async () => {
-  if (sql) await cleanup();
-  await sql?.end();
+  if (!connected) return;
+  await cleanup();
+  await sql.end();
 });
 
 describe("catalog store (Postgres)", () => {
