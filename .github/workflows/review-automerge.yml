@@ -1,0 +1,58 @@
+name: Review auto-merge
+
+on:
+  pull_request_target:
+    types: [synchronize, reopened, ready_for_review, converted_to_draft]
+  pull_request_review:
+    types: [submitted]
+
+permissions: {}
+
+jobs:
+  clear-after-change:
+    if: github.event_name == 'pull_request_target'
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clear previously armed auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if [[ "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq '.auto_merge != null')" == "true" ]]; then
+            gh pr merge --disable-auto "${PR_URL}"
+          fi
+
+  process-owner-review:
+    if: >-
+      github.event_name == 'pull_request_review' &&
+      github.event.review.user.login == github.repository_owner
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Arm or clear auto-merge from the owner review
+        env:
+          APPROVAL_MARKER: "<!-- cinematch-review:approve -->"
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          REVIEW_BODY: ${{ github.event.review.body }}
+          REVIEW_COMMIT: ${{ github.event.review.commit_id }}
+          REVIEW_STATE: ${{ github.event.review.state }}
+        run: |
+          current_head="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq '.head.sha')"
+          is_draft="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq '.draft')"
+
+          if [[ "${REVIEW_BODY}" == *"${APPROVAL_MARKER}" ]] \
+            && [[ "${REVIEW_COMMIT}" == "${current_head}" ]] \
+            && [[ "${is_draft}" == "false" ]] \
+            && [[ "${REVIEW_STATE}" =~ ^(approved|commented)$ ]]; then
+            gh pr merge --auto --squash --match-head-commit "${REVIEW_COMMIT}" "${PR_URL}"
+          elif [[ "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq '.auto_merge != null')" == "true" ]]; then
+            gh pr merge --disable-auto "${PR_URL}"
+          fi
