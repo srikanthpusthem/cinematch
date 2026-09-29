@@ -1,1 +1,1 @@
-PLACEHOLDER_FULL_CONTENT
+/workspace/cinematch/src/components/guest-flow/taste-step.tsx
