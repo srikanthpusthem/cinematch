@@ -6,15 +6,50 @@
   "first_air_date": "2008-01-20",
   "status": "Ended",
   "genres": [
-    { "id": 18, "name": "Drama" },
-    { "id": 80, "name": "Crime" }
+    {
+      "id": 18,
+      "name": "Drama"
+    },
+    {
+      "id": 80,
+      "name": "Crime"
+    }
   ],
   "poster_path": "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
   "vote_average": 8.9,
   "vote_count": 14000,
   "episode_run_time": [45, 47],
   "seasons": [
-    { "season_number": 0, "episode_count": 9, "air_date": "2009-02-17" },
-    { "season_number": 1, "episode_count": 7, "air_date": "2008-01-20" }
-  ]
+    {
+      "season_number": 0,
+      "episode_count": 9,
+      "air_date": "2009-02-17",
+      "name": "Specials",
+      "overview": "",
+      "poster_path": null
+    },
+    {
+      "season_number": 1,
+      "episode_count": 7,
+      "air_date": "2008-01-20",
+      "name": "Season 1",
+      "overview": "High school chemistry teacher Walter White...",
+      "poster_path": "/1BP4xYv9ZG4ZVHkL7ocOziBbSYH.jpg"
+    }
+  ],
+  "original_name": "Breaking Bad",
+  "last_air_date": "2013-09-29",
+  "popularity": 210.5,
+  "keywords": {
+    "results": [
+      {
+        "id": 15484,
+        "name": "chemistry"
+      },
+      {
+        "id": 1646,
+        "name": "drug dealer"
+      }
+    ]
+  }
 }
