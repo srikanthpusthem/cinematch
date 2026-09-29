@@ -9,6 +9,7 @@ import type {
   Page,
   SeriesDetails,
   SeriesSummary,
+  WatchProviders,
 } from "../../tmdb/schema";
 
 export function fakeMovie(
@@ -92,6 +93,8 @@ export interface FakeSourceOptions {
   /** Detail requests for these ids fail with the given TmdbError code. */
   failures?: Map<number, Failure>;
   pageSize?: number;
+  /** Watch-provider responses keyed "movie:<tmdbId>" or "series:<tmdbId>". */
+  providers?: Map<string, WatchProviders>;
 }
 
 const yearOf = (date: string | null) =>
@@ -104,7 +107,11 @@ export function createFakeSource(options: FakeSourceOptions) {
     failures = new Map(),
     pageSize = 2,
   } = options;
-  const calls = { discover: [] as QueryParams[], details: [] as number[] };
+  const calls = {
+    discover: [] as QueryParams[],
+    details: [] as number[],
+    providers: [] as string[],
+  };
 
   function matches(
     params: QueryParams,
@@ -143,6 +150,19 @@ export function createFakeSource(options: FakeSourceOptions) {
       : Promise.reject(new TmdbError("not_found", path, 1, 404));
   }
 
+  function watch(kind: "movie" | "series", id: number) {
+    calls.providers.push(`${kind}:${id}`);
+    const failure = failures.get(id);
+    if (failure) {
+      return Promise.reject(
+        new TmdbError(failure, `/3/${kind}/${id}/watch/providers`, 1),
+      );
+    }
+    return Promise.resolve(
+      structuredClone(options.providers?.get(`${kind}:${id}`) ?? {}),
+    );
+  }
+
   const source: CatalogSource = {
     discoverMovies(params = {}) {
       calls.discover.push(params);
@@ -175,10 +195,8 @@ export function createFakeSource(options: FakeSourceOptions) {
     getMovie: (id) => detail(movies, id, `/3/movie/${id}`),
     getSeries: (id) => detail(series, id, `/3/tv/${id}`),
     getSeason: () => Promise.reject(new Error("not used by ingestion")),
-    getMovieWatchProviders: () =>
-      Promise.reject(new Error("not used by ingestion")),
-    getSeriesWatchProviders: () =>
-      Promise.reject(new Error("not used by ingestion")),
+    getMovieWatchProviders: (id) => watch("movie", id),
+    getSeriesWatchProviders: (id) => watch("series", id),
   };
   return { source, calls };
 }
