@@ -142,7 +142,19 @@ describe("catalog schema: structure", () => {
       from pg_index i join pg_class t on t.oid = i.indrelid
       where t.relnamespace = 'public'::regnamespace`;
 
-    expect(fks.length).toBe(12);
+    expect(fks.map((fk) => fk.name).sort()).toEqual([
+      "movies_title_fkey",
+      "seasons_series_id_series_title_id_fk",
+      "series_title_fkey",
+      "title_availability_title_id_titles_id_fk",
+      "title_embeddings_title_id_titles_id_fk",
+      "title_genres_genre_id_genres_id_fk",
+      "title_genres_title_id_titles_id_fk",
+      "title_keywords_keyword_id_keywords_id_fk",
+      "title_keywords_title_id_titles_id_fk",
+      "title_offers_availability_fkey",
+      "title_offers_provider_id_watch_providers_id_fk",
+    ]);
     const isPrefix = (a: string[], b: string[]) =>
       a.every((c, i) => b[i] === c);
     const unindexed = fks.filter(
