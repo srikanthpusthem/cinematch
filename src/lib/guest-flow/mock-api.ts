@@ -50,6 +50,20 @@ function toOffer(offer: CatalogTitle["offers"][number]): ServiceOffer {
   };
 }
 
+/** Shared seed-genre overlap used by eligibility and reason text. */
+export function matchingSeedGenre(
+  title: CatalogTitle,
+  answers: GuestAnswers,
+): string | undefined {
+  if (answers.seedIds.length === 0) return undefined;
+  const seedGenres = new Set(
+    QUIZ_SEEDS.filter((seed) => answers.seedIds.includes(seed.id)).flatMap(
+      (seed) => seed.genres,
+    ),
+  );
+  return title.genres.find((genre) => seedGenres.has(genre));
+}
+
 function eligible(title: CatalogTitle, answers: GuestAnswers): boolean {
   if (answers.format && title.format !== answers.format) return false;
   if (answers.format === "movie") {
@@ -81,13 +95,8 @@ function eligible(title: CatalogTitle, answers: GuestAnswers): boolean {
     );
     if (!subscribed) return false;
   }
-  if (answers.seedIds.length > 0) {
-    const seedGenres = new Set(
-      QUIZ_SEEDS.filter((seed) => answers.seedIds.includes(seed.id)).flatMap(
-        (seed) => seed.genres,
-      ),
-    );
-    if (!title.genres.some((genre) => seedGenres.has(genre))) return false;
+  if (answers.seedIds.length > 0 && !matchingSeedGenre(title, answers)) {
+    return false;
   }
   return true;
 }
@@ -112,6 +121,12 @@ function timeLabel(title: CatalogTitle): string {
   return formatRuntime(title.minutes);
 }
 
+function coldStartReason(answers: GuestAnswers): string {
+  return answers.tasteSkipped
+    ? "Cold start, lower confidence, because the taste quiz was skipped."
+    : "Cold start, lower confidence, because no quiz titles were chosen.";
+}
+
 function reason(title: CatalogTitle, answers: GuestAnswers): string {
   const offers = visibleOffers(title, answers);
   const subscription = offers.find((offer) => offer.access === "subscription");
@@ -121,15 +136,10 @@ function reason(title: CatalogTitle, answers: GuestAnswers): string {
     : shown.access === "subscription"
       ? `Included with ${shown.serviceName}.`
       : `Only to ${shown.access} on ${shown.serviceName}, not included with a subscription.`;
-  const taste =
-    answers.seedIds.length === 0
-      ? "Cold start, lower confidence, because no quiz titles were chosen."
-      : `Shares ${title.genres.find((genre) =>
-          QUIZ_SEEDS.some(
-            (seed) =>
-              answers.seedIds.includes(seed.id) && seed.genres.includes(genre),
-          ),
-        )} with a quiz seed.`;
+  const matched = matchingSeedGenre(title, answers);
+  const taste = matched
+    ? `Shares ${matched} with a quiz seed.`
+    : coldStartReason(answers);
   return `${taste} ${timeLabel(title)} ${title.format}. ${access}`;
 }
 
@@ -174,17 +184,42 @@ function fromMatches(
   };
 }
 
+function abortError(): DOMException {
+  return new DOMException("The pick request was aborted.", "AbortError");
+}
+
+function delay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(abortError());
+      return;
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    function onAbort() {
+      clearTimeout(timer);
+      reject(abortError());
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
 export async function mockRecommend(
   answers: GuestAnswers,
   options?: { mode?: MockMode; delayMs?: number; signal?: AbortSignal },
 ): Promise<RecommendResult> {
   const mode = options?.mode ?? "success";
   const delayMs = options?.delayMs ?? (mode === "loading" ? 800 : 0);
+  if (options?.signal?.aborted) {
+    throw abortError();
+  }
   if (delayMs > 0) {
-    await new Promise((resolve) => setTimeout(resolve, delayMs));
+    await delay(delayMs, options?.signal);
   }
   if (options?.signal?.aborted) {
-    throw new DOMException("The pick request was aborted.", "AbortError");
+    throw abortError();
   }
   if (mode === "error") return { status: "error", message: ERROR_MESSAGE };
 
