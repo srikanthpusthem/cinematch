@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { CATALOG, QUIZ_SEEDS } from "./fixtures";
 import { matchingSeedGenre, mockRecommend } from "./mock-api";
-import { EMPTY_ANSWERS, tasteSelectionError, type GuestAnswers } from "./types";
+import {
+  EMPTY_ANSWERS,
+  movieLengthMatches,
+  seriesLengthMatches,
+  tasteSelectionError,
+  type GuestAnswers,
+} from "./types";
 
 const coldComfortMovies: GuestAnswers = {
   ...EMPTY_ANSWERS,
@@ -45,6 +51,22 @@ describe("matchingSeedGenre", () => {
     expect(title).toBeDefined();
     if (!title) return;
     expect(matchingSeedGenre(title, coldComfortMovies)).toBeUndefined();
+  });
+});
+
+describe("canonical length boundaries", () => {
+  it("matches movie boundaries at 99/100 and 149/150 minutes", () => {
+    expect(movieLengthMatches(99, "under-100")).toBe(true);
+    expect(movieLengthMatches(100, "under-100")).toBe(false);
+    expect(movieLengthMatches(149, "epic")).toBe(false);
+    expect(movieLengthMatches(150, "epic")).toBe(true);
+  });
+
+  it("matches series boundaries at 30/31 minutes and 3/4 seasons", () => {
+    expect(seriesLengthMatches(30, 1, "short-episodes")).toBe(true);
+    expect(seriesLengthMatches(31, 1, "short-episodes")).toBe(false);
+    expect(seriesLengthMatches(45, 3, "long-running")).toBe(false);
+    expect(seriesLengthMatches(45, 4, "long-running")).toBe(true);
   });
 });
 

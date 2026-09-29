@@ -1,3 +1,11 @@
+import {
+  MOVIE_EPIC_MIN_MINUTES,
+  MOVIE_SHORT_MAX_MINUTES,
+  SERIES_LONG_RUNNING_MIN_SEASONS,
+  SERIES_ONE_SEASON_COUNT,
+  SERIES_SHORT_EPISODE_MAX_MINUTES,
+} from "@/lib/recommendation-length";
+
 export const SERVICE_OPTIONS = [
   { id: "netflix", name: "Netflix" },
   { id: "max", name: "Max" },
@@ -32,11 +40,15 @@ export type WatchFormat = (typeof FORMATS)[number]["id"];
 export const MOVIE_LENGTHS = [
   {
     id: "under-100",
-    label: "Under 100 minutes",
-    detail: "99 minutes or less",
+    label: `Under ${MOVIE_SHORT_MAX_MINUTES + 1} minutes`,
+    detail: `${MOVIE_SHORT_MAX_MINUTES} minutes or less`,
   },
   { id: "any", label: "Any length", detail: "No runtime limit" },
-  { id: "epic", label: "Epic", detail: "150 minutes or more" },
+  {
+    id: "epic",
+    label: "Epic",
+    detail: `${MOVIE_EPIC_MIN_MINUTES} minutes or more`,
+  },
 ] as const;
 
 export type MovieLength = (typeof MOVIE_LENGTHS)[number]["id"];
@@ -46,13 +58,17 @@ export const SERIES_LENGTHS = [
   {
     id: "short-episodes",
     label: "Short episodes",
-    detail: "Episodes of 30 minutes or less",
+    detail: `Episodes of ${SERIES_SHORT_EPISODE_MAX_MINUTES} minutes or less`,
   },
-  { id: "one-season", label: "One season", detail: "Exactly one season" },
+  {
+    id: "one-season",
+    label: "One season",
+    detail: "Exactly one season",
+  },
   {
     id: "long-running",
     label: "Long-running",
-    detail: "Four or more seasons",
+    detail: `${SERIES_LONG_RUNNING_MIN_SEASONS} or more seasons`,
   },
 ] as const;
 
@@ -155,8 +171,8 @@ export function movieLengthMatches(
   minutes: number,
   length: MovieLength,
 ): boolean {
-  if (length === "under-100") return minutes <= 99;
-  if (length === "epic") return minutes >= 150;
+  if (length === "under-100") return minutes <= MOVIE_SHORT_MAX_MINUTES;
+  if (length === "epic") return minutes >= MOVIE_EPIC_MIN_MINUTES;
   return true;
 }
 
@@ -165,9 +181,11 @@ export function seriesLengthMatches(
   seasons: number,
   length: SeriesLength,
 ): boolean {
-  if (length === "short-episodes") return episodeMinutes <= 30;
-  if (length === "one-season") return seasons === 1;
-  return seasons >= 4;
+  if (length === "short-episodes") {
+    return episodeMinutes <= SERIES_SHORT_EPISODE_MAX_MINUTES;
+  }
+  if (length === "one-season") return seasons === SERIES_ONE_SEASON_COUNT;
+  return seasons >= SERIES_LONG_RUNNING_MIN_SEASONS;
 }
 
 export function tasteSelectionError(seedCount: number): string | null {
