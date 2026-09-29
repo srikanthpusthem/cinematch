@@ -1,0 +1,59 @@
+{
+  "id": 2001,
+  "name": "Echoes",
+  "original_name": "Echoes",
+  "first_air_date": "2019-09-01",
+  "status": "Returning Series",
+  "episode_run_time": [],
+  "last_episode_to_air": {
+    "runtime": 42
+  },
+  "genres": [
+    {
+      "id": 18,
+      "name": "Drama"
+    },
+    {
+      "id": 18,
+      "name": "Drama"
+    },
+    {
+      "id": 9648,
+      "name": "Mystery"
+    }
+  ],
+  "keywords": {
+    "results": [
+      {
+        "id": 7,
+        "name": "twins"
+      },
+      {
+        "id": 7,
+        "name": "twins"
+      }
+    ]
+  },
+  "seasons": [
+    {
+      "season_number": 1,
+      "episode_count": 8,
+      "name": "Season 1"
+    },
+    {
+      "season_number": 1,
+      "episode_count": 10,
+      "name": "Season 1 (dupe)"
+    },
+    {
+      "season_number": -1,
+      "episode_count": 3,
+      "name": "Bad"
+    },
+    {
+      "season_number": 2,
+      "episode_count": "ten",
+      "name": "Season 2"
+    }
+  ]
+}

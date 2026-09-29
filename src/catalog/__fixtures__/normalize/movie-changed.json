@@ -1,0 +1,15 @@
+{
+  "id": 1005,
+  "title": "Schema Drift",
+  "genre_ids": [18, 35],
+  "genres": "Drama, Comedy",
+  "runtime": "120",
+  "status": 3,
+  "vote_average": "8.1",
+  "release_date": 20200101,
+  "original_title": {
+    "en": "Schema Drift"
+  },
+  "overview": ["not", "text"],
+  "keywords": null
+}
