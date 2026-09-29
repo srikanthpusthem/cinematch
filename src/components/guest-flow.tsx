@@ -53,6 +53,7 @@ export function GuestFlow() {
   const [answers, setAnswers] = useState<GuestAnswers>(EMPTY_ANSWERS);
   const [phase, setPhase] = useState<Phase>({ type: "idle" });
   const request = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
   const stepIndex = FLOW_STEPS.findIndex((item) => item.id === step);
   const stepLabel = FLOW_STEPS[stepIndex]?.label ?? "Services";
 
@@ -60,7 +61,16 @@ export function GuestFlow() {
     setAnswers((current) => ({ ...current, ...partial }));
   }
 
+  function leavePicks(target: FlowStep) {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setStep(target);
+  }
+
   async function showPicks(next: GuestAnswers = answers) {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     const id = ++request.current;
     setStep("picks");
     setPhase({ type: "loading" });
@@ -68,6 +78,7 @@ export function GuestFlow() {
       const result = await mockRecommend(next, {
         mode,
         delayMs: mode === "loading" ? 800 : 150,
+        signal: controller.signal,
       });
       if (request.current === id) setPhase({ type: "ready", result });
     } catch (error) {
@@ -165,8 +176,8 @@ export function GuestFlow() {
       {step === "picks" ? (
         <PicksStep
           phase={phase}
-          onBack={() => setStep("tonight")}
-          onEdit={(target) => setStep(target)}
+          onBack={() => leavePicks("tonight")}
+          onEdit={(target) => leavePicks(target)}
           onRetry={() => void showPicks()}
         />
       ) : null}
