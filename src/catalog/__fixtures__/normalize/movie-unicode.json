@@ -1,0 +1,32 @@
+{
+  "id": 1003,
+  "title": "  Ame\u0301lie\u00a0\u200bPoulain  ",
+  "original_title": "Le Fabuleux Destin d\u2019Ame\u0301lie Poulain",
+  "original_language": "FR",
+  "overview": "Line one.\r\n\r\n\r\n\r\nLine two has\t\ttabs. Third\u0007 line.\ufeff",
+  "release_date": "2001-04-25",
+  "runtime": 122.4,
+  "status": "Released",
+  "genres": [
+    {
+      "id": 35,
+      "name": "Come\u0301die"
+    },
+    {
+      "id": 10749,
+      "name": "Romance\u200b"
+    }
+  ],
+  "keywords": {
+    "keywords": [
+      {
+        "id": 1,
+        "name": "family \ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67"
+      },
+      {
+        "id": 2,
+        "name": "\u0928\u092e\u0938\u094d\u0924\u0947"
+      }
+    ]
+  }
+}

@@ -85,6 +85,13 @@ describe("TMDB client: endpoints", () => {
       genres: [{ id: 18, name: "Drama" }],
     });
     expect(movie).not.toHaveProperty("budget");
+    expect(requests[0]?.url.searchParams.get("append_to_response")).toBe(
+      "keywords",
+    );
+    expect(movie.keywords.map((k) => k.name)).toEqual([
+      "support group",
+      "dual identity",
+    ]);
   });
 
   it("fetches series, seasons and episodes", async () => {
@@ -95,10 +102,33 @@ describe("TMDB client: endpoints", () => {
     const series = await client.getSeries(1396);
     const season = await client.getSeason(1396, 1);
 
-    expect(series.seasons).toEqual([
-      { seasonNumber: 0, episodeCount: 9, airDate: "2009-02-17" },
-      { seasonNumber: 1, episodeCount: 7, airDate: "2008-01-20" },
+    expect(
+      series.seasons.map(({ seasonNumber, episodeCount, name, overview }) => ({
+        seasonNumber,
+        episodeCount,
+        name,
+        overview,
+      })),
+    ).toEqual([
+      { seasonNumber: 0, episodeCount: 9, name: "Specials", overview: null },
+      {
+        seasonNumber: 1,
+        episodeCount: 7,
+        name: "Season 1",
+        overview: "High school chemistry teacher Walter White...",
+      },
     ]);
+    expect(series.keywords).toEqual([
+      { id: 15484, name: "chemistry" },
+      { id: 1646, name: "drug dealer" },
+    ]);
+    expect(series).toMatchObject({
+      originalName: "Breaking Bad",
+      lastAirDate: "2013-09-29",
+    });
+    expect(requests[0]?.url.searchParams.get("append_to_response")).toBe(
+      "keywords",
+    );
     expect(series.episodeRunTimes).toEqual([45, 47]);
     expect(requests[1]?.url.pathname).toBe("/3/tv/1396/season/1");
     expect(season.episodes).toHaveLength(2);
@@ -343,6 +373,25 @@ describe("TMDB client: timeouts", () => {
 });
 
 describe("TMDB client: malformed responses", () => {
+  it("treats missing keywords as empty but rejects a bad keywords shape", async () => {
+    const withoutKeywords = {
+      ...(fixture("movie-550") as object),
+      keywords: undefined,
+    };
+    const ok = harness([() => json(withoutKeywords)]);
+    expect((await ok.client.getMovie(550)).keywords).toEqual([]);
+
+    const bad = harness([
+      () =>
+        json({
+          ...(fixture("movie-550") as object),
+          keywords: { keywords: [{ id: 1 }] },
+        }),
+    ]);
+    const error = await caught(bad.client.getMovie(550));
+    expect(error.message).toContain("movie.keywords.keywords[0].name");
+  });
+
   it("rejects invalid JSON without retrying", async () => {
     const { client, requests } = harness([
       () => new Response("<html>gateway</html>", { status: 200 }),

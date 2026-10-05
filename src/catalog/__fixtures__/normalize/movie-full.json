@@ -1,32 +1,38 @@
 {
+  "adult": false,
+  "backdrop_path": "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg",
   "id": 550,
   "imdb_id": "tt0137523",
-  "title": "Fight Club",
   "original_language": "en",
+  "original_title": "Fight Club",
   "overview": "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy.",
+  "popularity": 61.416,
+  "poster_path": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
   "release_date": "1999-10-15",
   "runtime": 139,
+  "status": "Released",
+  "title": "Fight Club",
+  "vote_average": 8.4,
+  "vote_count": 30000,
   "genres": [
+    {
+      "id": 53,
+      "name": "Thriller"
+    },
     {
       "id": 18,
       "name": "Drama"
     }
   ],
-  "poster_path": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
-  "vote_average": 8.4,
-  "vote_count": 30000,
-  "budget": 63000000,
-  "original_title": "Fight Club",
-  "popularity": 61.4,
   "keywords": {
     "keywords": [
       {
-        "id": 825,
-        "name": "support group"
-      },
-      {
         "id": 4565,
         "name": "dual identity"
+      },
+      {
+        "id": 825,
+        "name": "support group"
       }
     ]
   }
