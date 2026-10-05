@@ -6,9 +6,28 @@
   "overview": "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy.",
   "release_date": "1999-10-15",
   "runtime": 139,
-  "genres": [{ "id": 18, "name": "Drama" }],
+  "genres": [
+    {
+      "id": 18,
+      "name": "Drama"
+    }
+  ],
   "poster_path": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
   "vote_average": 8.4,
   "vote_count": 30000,
-  "budget": 63000000
+  "budget": 63000000,
+  "original_title": "Fight Club",
+  "popularity": 61.4,
+  "keywords": {
+    "keywords": [
+      {
+        "id": 825,
+        "name": "support group"
+      },
+      {
+        "id": 4565,
+        "name": "dual identity"
+      }
+    ]
+  }
 }
