@@ -53,12 +53,15 @@ export interface Genre {
   name: string;
 }
 
+export type Keyword = Genre;
+
 export interface MovieSummary {
   id: number;
   title: string;
   releaseDate: string | null;
   genreIds: number[];
   popularity: number | null;
+  voteCount: number | null;
 }
 
 export interface SeriesSummary {
@@ -67,6 +70,7 @@ export interface SeriesSummary {
   firstAirDate: string | null;
   genreIds: number[];
   popularity: number | null;
+  voteCount: number | null;
 }
 
 export interface Page<T> {
@@ -79,6 +83,7 @@ export interface Page<T> {
 export interface MovieDetails {
   id: number;
   title: string;
+  originalTitle: string | null;
   originalLanguage: string | null;
   overview: string | null;
   releaseDate: string | null;
@@ -87,28 +92,39 @@ export interface MovieDetails {
   posterPath: string | null;
   voteAverage: number | null;
   voteCount: number | null;
+  popularity: number | null;
   imdbId: string | null;
+  /** Present when requested with append_to_response=keywords; else []. */
+  keywords: Keyword[];
 }
 
 export interface SeasonSummary {
   seasonNumber: number;
   episodeCount: number;
   airDate: string | null;
+  name: string | null;
+  overview: string | null;
+  posterPath: string | null;
 }
 
 export interface SeriesDetails {
   id: number;
   name: string;
+  originalName: string | null;
   originalLanguage: string | null;
   overview: string | null;
   firstAirDate: string | null;
+  lastAirDate: string | null;
   status: string | null;
   genres: Genre[];
   posterPath: string | null;
   voteAverage: number | null;
   voteCount: number | null;
+  popularity: number | null;
   episodeRunTimes: number[];
   seasons: SeasonSummary[];
+  /** Present when requested with append_to_response=keywords; else []. */
+  keywords: Keyword[];
 }
 
 export interface Episode {
@@ -154,6 +170,12 @@ function genres(value: unknown, where: string): Genre[] {
   });
 }
 
+/** Movies nest keywords under `keywords`, TV under `results`. */
+function keywordList(value: unknown, key: string, where: string): Keyword[] {
+  if (value === undefined || value === null) return [];
+  return genres(obj(value, where)[key], `${where}.${key}`);
+}
+
 function genreIds(value: unknown, where: string): number[] {
   return arr(value ?? [], where).map((id, i) => int(id, `${where}[${i}]`));
 }
@@ -184,6 +206,7 @@ export function parseMovieSummary(
     releaseDate: optStr(o.release_date, `${where}.release_date`),
     genreIds: genreIds(o.genre_ids, `${where}.genre_ids`),
     popularity: optNum(o.popularity, `${where}.popularity`),
+    voteCount: optNum(o.vote_count, `${where}.vote_count`),
   };
 }
 
@@ -198,6 +221,7 @@ export function parseSeriesSummary(
     firstAirDate: optStr(o.first_air_date, `${where}.first_air_date`),
     genreIds: genreIds(o.genre_ids, `${where}.genre_ids`),
     popularity: optNum(o.popularity, `${where}.popularity`),
+    voteCount: optNum(o.vote_count, `${where}.vote_count`),
   };
 }
 
@@ -206,6 +230,7 @@ export function parseMovieDetails(value: unknown): MovieDetails {
   return {
     id: int(o.id, "movie.id"),
     title: str(o.title, "movie.title"),
+    originalTitle: optStr(o.original_title, "movie.original_title"),
     originalLanguage: optStr(o.original_language, "movie.original_language"),
     overview: optStr(o.overview, "movie.overview"),
     releaseDate: optStr(o.release_date, "movie.release_date"),
@@ -214,7 +239,9 @@ export function parseMovieDetails(value: unknown): MovieDetails {
     posterPath: optStr(o.poster_path, "movie.poster_path"),
     voteAverage: optNum(o.vote_average, "movie.vote_average"),
     voteCount: optNum(o.vote_count, "movie.vote_count"),
+    popularity: optNum(o.popularity, "movie.popularity"),
     imdbId: optStr(o.imdb_id, "movie.imdb_id"),
+    keywords: keywordList(o.keywords, "keywords", "movie.keywords"),
   };
 }
 
@@ -223,14 +250,17 @@ export function parseSeriesDetails(value: unknown): SeriesDetails {
   return {
     id: int(o.id, "series.id"),
     name: str(o.name, "series.name"),
+    originalName: optStr(o.original_name, "series.original_name"),
     originalLanguage: optStr(o.original_language, "series.original_language"),
     overview: optStr(o.overview, "series.overview"),
     firstAirDate: optStr(o.first_air_date, "series.first_air_date"),
+    lastAirDate: optStr(o.last_air_date, "series.last_air_date"),
     status: optStr(o.status, "series.status"),
     genres: genres(o.genres, "series.genres"),
     posterPath: optStr(o.poster_path, "series.poster_path"),
     voteAverage: optNum(o.vote_average, "series.vote_average"),
     voteCount: optNum(o.vote_count, "series.vote_count"),
+    popularity: optNum(o.popularity, "series.popularity"),
     episodeRunTimes: arr(
       o.episode_run_time ?? [],
       "series.episode_run_time",
@@ -242,8 +272,12 @@ export function parseSeriesDetails(value: unknown): SeriesDetails {
         seasonNumber: int(season.season_number, `${where}.season_number`),
         episodeCount: int(season.episode_count, `${where}.episode_count`),
         airDate: optStr(season.air_date, `${where}.air_date`),
+        name: optStr(season.name, `${where}.name`),
+        overview: optStr(season.overview, `${where}.overview`),
+        posterPath: optStr(season.poster_path, `${where}.poster_path`),
       };
     }),
+    keywords: keywordList(o.keywords, "results", "series.keywords"),
   };
 }
 
