@@ -164,10 +164,16 @@ describe("mockRecommend", () => {
     expect(result.status).toBe("shortage");
     if (result.status !== "shortage") return;
     expect(result.best.title).toBe("Blade Runner 2049");
-    expect(result.best.offers).toEqual([
-      { serviceId: "apple", serviceName: "Apple TV+", access: "subscription" },
+    expect(result.best.offers).toMatchObject([
+      {
+        serviceId: "apple",
+        serviceName: "Apple TV+",
+        access: "subscription",
+        verifiedWatchUrl: "https://watch.example/apple/rec-blade-runner",
+      },
       { serviceId: "prime", serviceName: "Prime Video", access: "rent" },
     ]);
+    expect(result.best.offers[1]?.verifiedWatchUrl).toBeUndefined();
     expect(result.best.reason).toMatch(/Included with Apple TV\+/);
     expect(result.best.reason).not.toMatch(/Included with Prime Video/);
   });
@@ -188,6 +194,32 @@ describe("mockRecommend", () => {
       message:
         "The mock picker failed before choosing titles. No picks were invented.",
     });
+  });
+
+  it("forces stale freshness timestamps without inventing titles", async () => {
+    const result = await mockRecommend(coldComfortMovies, { mode: "stale" });
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    expect(result.best.title).toBe("About Time");
+    for (const offer of result.best.offers) {
+      expect(offer.freshnessCheckedAt).toBe("2026-09-18T18:00:00.000Z");
+    }
+  });
+
+  it("forces unavailable mode by stripping verified watch URLs", async () => {
+    const result = await mockRecommend(coldComfortMovies, {
+      mode: "unavailable",
+    });
+    expect(result.status).toBe("unavailable");
+    if (result.status !== "unavailable") return;
+    expect(result.message).toMatch(/no verified Watch link/i);
+    const picks = [result.best, ...result.alternatives];
+    expect(picks.length).toBeGreaterThan(0);
+    for (const pick of picks) {
+      for (const offer of pick.offers) {
+        expect(offer.verifiedWatchUrl).toBeUndefined();
+      }
+    }
   });
 
   it("rejects an unfinished taste selection", async () => {

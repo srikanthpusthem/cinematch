@@ -95,6 +95,24 @@ export type FlowStep = (typeof FLOW_STEPS)[number]["id"];
 
 export type Access = "subscription" | "rent" | "buy";
 
+/** Fixed mock "now" for freshness comparisons in fixtures and UI. */
+export const MOCK_NOW = "2026-09-28T18:00:00.000Z";
+
+/** Availability older than this (relative to MOCK_NOW) is treated as stale. */
+export const FRESHNESS_STALE_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function isFreshnessStale(
+  checkedAt: string,
+  nowIso: string = MOCK_NOW,
+): boolean {
+  const checked = Date.parse(checkedAt);
+  const now = Date.parse(nowIso);
+  if (Number.isNaN(checked) || Number.isNaN(now)) return true;
+  return now - checked > FRESHNESS_STALE_MS;
+}
+
+export type PickFeedbackAction = "watched" | "like" | "not-for-me";
+
 export type GuestAnswers = {
   serviceIds: ServiceId[];
   servicesSkipped: boolean;
@@ -133,6 +151,13 @@ export type ServiceOffer = {
   serviceId: ServiceId;
   serviceName: string;
   access: Access;
+  /** ISO timestamp when this offer's availability was last checked. */
+  freshnessCheckedAt: string;
+  /**
+   * Verified HTTPS playback deep-link from fixtures only.
+   * Never invent in the UI; omit when no verified link exists.
+   */
+  verifiedWatchUrl?: string;
 };
 
 export type Recommendation = {
@@ -162,10 +187,24 @@ export type RecommendResult =
       best: Recommendation;
       alternatives: Recommendation[];
     }
+  | {
+      status: "unavailable";
+      confidence: RecommendConfidence;
+      message: string;
+      best: Recommendation;
+      alternatives: Recommendation[];
+    }
   | { status: "empty"; message: string }
   | { status: "error"; message: string };
 
-export type MockMode = "success" | "empty" | "shortage" | "error" | "loading";
+export type MockMode =
+  | "success"
+  | "empty"
+  | "shortage"
+  | "error"
+  | "loading"
+  | "stale"
+  | "unavailable";
 
 export function movieLengthMatches(
   minutes: number,

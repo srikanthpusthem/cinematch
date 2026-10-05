@@ -27,7 +27,9 @@ function mockMode(value: string | null): MockMode {
     value === "empty" ||
     value === "shortage" ||
     value === "error" ||
-    value === "loading"
+    value === "loading" ||
+    value === "stale" ||
+    value === "unavailable"
   ) {
     return value;
   }
@@ -172,6 +174,12 @@ export function GuestFlow() {
           onBack={() => leavePicks("tonight")}
           onEdit={(target) => leavePicks(target)}
           onRetry={() => void showPicks()}
+          onFeedback={() => {
+            /* Event output only; persistence is #28. */
+          }}
+          onShowMore={() => {
+            /* Event output only; persistence is #28. */
+          }}
         />
       ) : null}
     </main>
