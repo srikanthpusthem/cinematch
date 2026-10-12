@@ -9,6 +9,22 @@ import {
   type MovieLength,
   type SeriesLength,
 } from "@/lib/guest-flow/types";
+import { StepHeader } from "./ui";
+
+const moodSymbols: Record<string, string> = {
+  laugh: "☺",
+  cry: "◡",
+  thrill: "ϟ",
+  think: "✳",
+  comfort: "☾",
+};
+const moodDetails: Record<string, string> = {
+  laugh: "Keep it light",
+  cry: "Feel something",
+  thrill: "On the edge",
+  think: "Stay curious",
+  comfort: "Settle in",
+};
 
 export function TonightStep({
   answers,
@@ -25,8 +41,17 @@ export function TonightStep({
 }) {
   const lengths = answers.format === "series" ? SERIES_LENGTHS : MOVIE_LENGTHS;
   return (
-    <section className="mt-8">
-      <h2 className="text-xl font-semibold">What do you want tonight?</h2>
+    <section className="flow-step" aria-labelledby="tonight-heading">
+      <StepHeader
+        id="tonight-heading"
+        eyebrow="Set the scene"
+        title="What do you want tonight?"
+      >
+        <p>
+          A little escapism, a big feeling, or something that stays with you.
+          Choose the mood and time you have.
+        </p>
+      </StepHeader>
       <ChoiceGroup
         legend="Mood"
         name="mood"
@@ -60,24 +85,20 @@ export function TonightStep({
           }
         />
       ) : (
-        <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="selection-summary">
           Choose a movie or a series to see length boundaries.
         </p>
       )}
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="step-actions">
         <button
           type="button"
-          className="min-h-11 rounded-lg bg-zinc-950 px-4 text-white disabled:opacity-40 dark:bg-zinc-50 dark:text-zinc-950"
+          className="button-primary"
           onClick={onContinue}
           disabled={!canContinue}
         >
           See picks
         </button>
-        <button
-          type="button"
-          className="min-h-11 px-4 text-left"
-          onClick={onBack}
-        >
+        <button type="button" className="button-text" onClick={onBack}>
           Back
         </button>
       </div>
@@ -99,30 +120,38 @@ function ChoiceGroup<T extends string>({
   onChange: (id: T) => void;
 }) {
   return (
-    <fieldset className="mt-4 space-y-2">
-      <legend className="text-sm font-medium">{legend}</legend>
-      {options.map((option) => (
-        <label
-          key={option.id}
-          className="flex min-h-11 items-start gap-3 rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-800"
-        >
-          <input
-            className="mt-1"
-            type="radio"
-            name={name}
-            checked={value === option.id}
-            onChange={() => onChange(option.id)}
-          />
-          <span>
-            {option.label}
-            {option.detail ? (
-              <span className="block text-sm text-zinc-500">
-                {option.detail}
+    <fieldset className={`choice-fieldset choice-${name}`}>
+      <legend>{legend}</legend>
+      <div className="choice-grid">
+        {options.map((option) => (
+          <label
+            key={option.id}
+            className="choice-card"
+            data-selected={value === option.id}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={option.id}
+              checked={value === option.id}
+              onChange={() => onChange(option.id)}
+            />
+            {name === "mood" ? (
+              <span className="mood-symbol" aria-hidden="true">
+                {moodSymbols[option.id]}
               </span>
             ) : null}
-          </span>
-        </label>
-      ))}
+            <span className="choice-copy">
+              <span className="choice-title">{option.label}</span>
+              {option.detail || name === "mood" ? (
+                <span className="choice-detail">
+                  {option.detail ?? moodDetails[option.id]}
+                </span>
+              ) : null}
+            </span>
+          </label>
+        ))}
+      </div>
     </fieldset>
   );
 }

@@ -16,7 +16,8 @@ export const metadata: Metadata = {
 // prominent than ours) and JustWatch (source of availability data).
 export default function AboutPage() {
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12">
+    <main id="main-content" tabIndex={-1} className="about-page">
+      <p className="eyebrow mb-4">Behind the scenes</p>
       <h1 className="text-3xl font-semibold tracking-tight">
         About &amp; credits
       </h1>
@@ -24,7 +25,7 @@ export default function AboutPage() {
         CineMatch helps you pick a movie or series to watch tonight.
       </p>
 
-      <section aria-labelledby="data-sources" className="mt-10">
+      <section aria-labelledby="data-sources" className="about-sources">
         <h2 id="data-sources" className="text-lg font-semibold">
           Data sources
         </h2>
@@ -53,7 +54,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <p className="mt-10">
+      <p className="about-sources">
         <Link href="/" className="underline">
           Back to CineMatch
         </Link>

@@ -10,6 +10,7 @@ import {
   type CatalogTitle,
 } from "@/lib/guest-flow/catalog-client";
 import { type AvoidableGenre, type GuestAnswers } from "@/lib/guest-flow/types";
+import { PosterPlaceholder, StepHeader } from "./ui";
 
 type CatalogPhase =
   | { type: "loading" }
@@ -115,16 +116,19 @@ export function TasteStep({
         ? seeds.titles
         : [];
   return (
-    <section className="mt-8" aria-labelledby="taste-heading">
-      <h2 id="taste-heading" className="text-xl font-semibold">
-        Optional taste quiz
-      </h2>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        Quiz seeds, not recommendations. Pick 3 to 5 favorites, or continue with
-        none. You do not have to choose unfamiliar titles.
-      </p>
+    <section className="flow-step" aria-labelledby="taste-heading">
+      <StepHeader
+        id="taste-heading"
+        eyebrow="Your kind of story"
+        title="Optional taste quiz"
+      >
+        <p>
+          Quiz seeds, not recommendations. Pick 3 to 5 favorites, or continue
+          with none. You do not have to choose unfamiliar titles.
+        </p>
+      </StepHeader>
       <form
-        className="mt-4 flex flex-col gap-2"
+        className="favorite-search"
         onSubmit={(event) => void submitSearch(event)}
       >
         <label htmlFor="favorite-search" className="text-sm font-medium">
@@ -133,17 +137,20 @@ export function TasteStep({
         <input
           id="favorite-search"
           type="search"
+          name="favorite-search"
+          autoComplete="off"
+          placeholder="A movie or series you love…"
           value={query}
           onChange={(event) => changeQuery(event.target.value)}
           minLength={2}
           maxLength={100}
-          className="min-h-11 rounded-lg border border-zinc-300 px-3 dark:border-zinc-700"
+          className="search-input"
         />
         <div className="flex flex-wrap gap-2">
           <button
             type="submit"
             disabled={query.trim().length < 2}
-            className="min-h-11 rounded-lg border px-4 disabled:opacity-40"
+            className="button-secondary"
           >
             Search titles
           </button>
@@ -151,7 +158,7 @@ export function TasteStep({
             <button
               type="button"
               onClick={() => changeQuery("")}
-              className="min-h-11 px-4"
+              className="button-text"
             >
               Show quiz titles
             </button>
@@ -159,16 +166,16 @@ export function TasteStep({
         </div>
       </form>
       {seeds.type === "loading" && search.type !== "ready" ? (
-        <p className="mt-3" role="status">
+        <p className="flow-notice loading-notice" role="status">
           Loading quiz titles…
         </p>
       ) : null}
       {seeds.type === "error" && search.type !== "ready" ? (
-        <div className="mt-3">
+        <div className="flow-notice notice-error">
           <p role="alert">{seeds.message}</p>
           <button
             type="button"
-            className="min-h-11 px-4"
+            className="button-text"
             onClick={() => {
               setSeeds({ type: "loading" });
               setRetry((value) => value + 1);
@@ -179,81 +186,94 @@ export function TasteStep({
         </div>
       ) : null}
       {search.type === "loading" ? (
-        <p role="status" className="mt-3">
+        <p role="status" className="flow-notice loading-notice">
           Searching titles…
         </p>
       ) : null}
       {search.type === "error" ? (
-        <p role="alert" className="mt-3">
+        <p role="alert" className="flow-notice notice-error">
           {search.message}
         </p>
       ) : null}
       {search.type === "ready" && search.hasMore ? (
-        <p className="mt-3 text-sm" role="status">
+        <p className="flow-notice" role="status">
           Showing the first {search.titles.length} matches. Refine your search
           to find a different title.
         </p>
       ) : null}
       {titles.length > 0 ? (
-        <fieldset className="mt-4 space-y-2">
-          <legend className="text-sm font-medium">
+        <fieldset className="taste-fieldset">
+          <legend>
             {search.type === "ready" ? "Search results" : "Quiz seeds"}
           </legend>
-          {titles.map((title) => (
-            <label
-              key={title.id}
-              className="flex min-h-11 items-center gap-3 rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-800"
-            >
-              <input
-                type="checkbox"
-                checked={answers.seedIds.includes(title.id)}
-                disabled={
-                  !answers.seedIds.includes(title.id) &&
-                  answers.seedIds.length >= 5
-                }
-                onChange={() => onToggleSeed(title.id)}
-              />
-              {catalogPosterUrl(title.posterPath) ? (
-                <Image
-                  src={catalogPosterUrl(title.posterPath)!}
-                  alt=""
-                  width={40}
-                  height={60}
-                  unoptimized
-                  className="rounded object-cover"
-                />
-              ) : null}
-              <span>
-                {title.title}
-                {title.year !== null ? (
-                  <span className="text-zinc-500"> ({title.year})</span>
-                ) : null}
-                <span className="block text-xs text-zinc-500">
-                  {title.kind === "movie" ? "Movie" : "Series"}
-                </span>
-              </span>
-            </label>
-          ))}
+          <div className="seed-grid">
+            {titles.map((title) => {
+              const selected = answers.seedIds.includes(title.id);
+              const disabled = !selected && answers.seedIds.length >= 5;
+              const posterUrl = catalogPosterUrl(title.posterPath);
+              return (
+                <label
+                  key={title.id}
+                  className="seed-card"
+                  data-selected={selected}
+                  data-disabled={disabled}
+                >
+                  <input
+                    type="checkbox"
+                    name="favorites"
+                    value={title.id}
+                    checked={selected}
+                    disabled={disabled}
+                    onChange={() => onToggleSeed(title.id)}
+                  />
+                  <div className="seed-poster">
+                    {posterUrl ? (
+                      <Image
+                        src={posterUrl}
+                        alt=""
+                        width={180}
+                        height={270}
+                        unoptimized
+                        className="poster-image"
+                      />
+                    ) : (
+                      <PosterPlaceholder />
+                    )}
+                    <span className="seed-select-mark" aria-hidden="true">
+                      {selected ? "✓" : "+"}
+                    </span>
+                  </div>
+                  <span className="seed-copy">
+                    <span className="seed-title">{title.title}</span>
+                    <span className="seed-meta">
+                      {title.year !== null ? `${title.year} · ` : ""}
+                      {title.kind === "movie" ? "Movie" : "Series"}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
         </fieldset>
       ) : search.type === "ready" || seeds.type === "ready" ? (
-        <p role="status" className="mt-4">
+        <p role="status" className="flow-notice">
           {search.type === "ready"
             ? "No matching titles. Try another search."
             : "No quiz titles are available in the catalog yet. You can continue without favorites."}
         </p>
       ) : null}
       {answers.seedIds.length > 0 ? (
-        <div className="mt-4" aria-label="Selected favorites">
+        <div className="selected-favorites" aria-label="Selected favorites">
           <p className="font-medium text-sm">Your selected favorites</p>
-          <ul className="mt-2 space-y-2">
+          <ul className="favorites-list">
             {answers.seedIds.map((id) => (
-              <li key={id} className="flex items-center justify-between gap-2">
+              <li key={id} className="favorite-item">
                 <span>
                   {knownTitles[id]?.title ?? `Saved favorite (catalog ${id})`}
                 </span>
                 <button
                   type="button"
-                  className="min-h-11 px-3"
+                  className="button-text"
                   aria-label={`Remove ${knownTitles[id]?.title ?? `saved favorite ${id}`}`}
                   onClick={() => onToggleSeed(id)}
                 >
@@ -264,21 +284,21 @@ export function TasteStep({
           </ul>
         </div>
       ) : null}
-      <p className="mt-3 text-sm" role="status">
+      <p className="flow-notice" role="status">
         {answers.seedIds.length} selected.{error ? ` ${error}` : null}
       </p>
       {genres.length > 0 || answers.avoidedGenres.length > 0 ? (
-        <fieldset className="mt-4 space-y-2">
+        <fieldset className="genre-fieldset">
           <legend className="text-sm font-medium">Genres to avoid</legend>
           {genres.map((genre) => (
-            <label key={genre.id} className="flex min-h-11 items-center gap-3">
+            <label key={genre.id} className="genre-choice">
               <input
                 type="checkbox"
                 checked={answers.avoidedGenres.includes(genre.id)}
                 onChange={() => onToggleGenre(genre.id)}
               />
-              {genre.name}{" "}
-              <span className="text-xs text-zinc-500">
+              <span className="genre-name">{genre.name}</span>
+              <span className="genre-kind">
                 (
                 {genre.kinds
                   .map((kind) => (kind === "movie" ? "movies" : "series"))
@@ -290,7 +310,7 @@ export function TasteStep({
           {answers.avoidedGenres
             .filter((id) => !genres.some((genre) => genre.id === id))
             .map((id) => (
-              <label key={id} className="flex min-h-11 items-center gap-3">
+              <label key={id} className="genre-choice">
                 <input
                   type="checkbox"
                   checked
@@ -301,27 +321,19 @@ export function TasteStep({
             ))}
         </fieldset>
       ) : null}
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="step-actions">
         <button
           type="button"
-          className="min-h-11 rounded-lg bg-zinc-950 px-4 text-white disabled:opacity-40 dark:bg-zinc-50 dark:text-zinc-950"
+          className="button-primary"
           onClick={onContinue}
           disabled={!canContinue}
         >
           Continue
         </button>
-        <button
-          type="button"
-          className="min-h-11 rounded-lg border border-zinc-300 px-4 dark:border-zinc-700"
-          onClick={onSkip}
-        >
+        <button type="button" className="button-secondary" onClick={onSkip}>
           Skip taste quiz
         </button>
-        <button
-          type="button"
-          className="min-h-11 px-4 text-left"
-          onClick={onBack}
-        >
+        <button type="button" className="button-text" onClick={onBack}>
           Back
         </button>
       </div>

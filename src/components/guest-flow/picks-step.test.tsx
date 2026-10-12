@@ -374,3 +374,89 @@ describe("live catalog presentation", () => {
     expect(html).not.toContain('<ul aria-label="Subscription (included)"');
   });
 });
+
+describe("selected subscription presentation", () => {
+  it("highlights selected services first while retaining other offer information", () => {
+    const html = renderToStaticMarkup(
+      <PicksStep
+        source="catalog"
+        selectedServiceIds={["netflix"]}
+        phase={{
+          type: "ready",
+          result: {
+            status: "ok",
+            confidence: "seeded",
+            best: {
+              ...basePick,
+              offers: [
+                { ...basePick.offers[0]!, verifiedWatchUrl: undefined },
+                {
+                  serviceId: "netflix",
+                  serviceName: "Netflix",
+                  access: "subscription",
+                  freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+                },
+                basePick.offers[1]!,
+              ],
+            },
+            alternatives: [],
+          },
+        }}
+        onBack={() => undefined}
+        onEdit={() => undefined}
+        onRetry={() => undefined}
+      />,
+    );
+    expect(html).toContain("Your selected service");
+    expect(html).toContain("Prime Video");
+    expect(html).toContain("Apple TV+: rent");
+    expect(html.indexOf("Netflix")).toBeLessThan(html.indexOf("Prime Video"));
+    expect(html).not.toContain(">Watch</a>");
+  });
+
+  it("adds no selected-service badge when services were skipped", () => {
+    const html = renderToStaticMarkup(
+      <PicksStep
+        selectedServiceIds={[]}
+        phase={{
+          type: "ready",
+          result: {
+            status: "ok",
+            confidence: "seeded",
+            best: basePick,
+            alternatives: [],
+          },
+        }}
+        onBack={() => undefined}
+        onEdit={() => undefined}
+        onRetry={() => undefined}
+      />,
+    );
+    expect(html).not.toContain("Your selected service");
+    expect(html).toContain("Prime Video");
+    expect(html).toContain("Apple TV+: rent");
+  });
+
+  it("never badges selected rent or buy offers as included subscriptions", () => {
+    const html = renderToStaticMarkup(
+      <PicksStep
+        selectedServiceIds={["apple"]}
+        phase={{
+          type: "ready",
+          result: {
+            status: "ok",
+            confidence: "seeded",
+            best: basePick,
+            alternatives: [],
+          },
+        }}
+        onBack={() => undefined}
+        onEdit={() => undefined}
+        onRetry={() => undefined}
+      />,
+    );
+    expect(html).not.toContain("Your selected service");
+    expect(html).toContain("Rent or buy (not included)");
+    expect(html).toContain("Apple TV+: rent");
+  });
+});

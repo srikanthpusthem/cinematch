@@ -36,6 +36,7 @@ import { ServicesStep } from "./services-step";
 import { TasteStep } from "./taste-step";
 import { TonightStep } from "./tonight-step";
 import { PicksStep } from "./picks-step";
+import { FilmMark } from "./ui";
 
 type Phase =
   | { type: "idle" }
@@ -73,6 +74,7 @@ export function GuestFlow() {
   const abortRef = useRef<AbortController | null>(null);
   const seenIds = useRef<string[]>([]);
   const mainRef = useRef<HTMLElement | null>(null);
+  const focusedStep = useRef<FlowStep>("services");
   const answers = snapshot.answers;
   const feedback = deriveLiveFeedback(snapshot);
   const stepIndex = FLOW_STEPS.findIndex((item) => item.id === step);
@@ -121,6 +123,12 @@ export function GuestFlow() {
     if (heading) {
       heading.tabIndex = -1;
       heading.focus({ preventScroll: true });
+      if (focusedStep.current !== step) {
+        heading
+          .closest(".flow-step")
+          ?.scrollIntoView({ block: "start", behavior: "auto" });
+      }
+      focusedStep.current = step;
     }
   }, [step, hydrated]);
 
@@ -266,205 +274,268 @@ export function GuestFlow() {
   return (
     <main
       ref={mainRef}
-      className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-8 text-zinc-950 sm:px-6 dark:text-zinc-50"
+      id="main-content"
+      tabIndex={-1}
+      className="cinema-shell"
     >
-      <p
-        className="text-sm text-zinc-500 dark:text-zinc-400"
-        aria-live="polite"
-      >
-        Step {stepIndex + 1} of {FLOW_STEPS.length} ·{" "}
-        {FLOW_STEPS[stepIndex]?.label}
-      </p>
-      <h1 className="mt-2 text-4xl font-semibold tracking-tight">CineMatch</h1>
-      <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-        Find something to watch in under two minutes.
-      </p>
-      <p className="mt-2 text-xs text-zinc-500">
-        Private US catalog · metadata-based matching · no account needed
-      </p>
-      {migrationNotice ? (
-        <p className="mt-3 text-sm" role="status">
-          {migrationNotice}
-        </p>
-      ) : null}
-      {storageNotice ? (
-        <p className="mt-3 text-sm" role="status">
-          {storageNotice}
-        </p>
-      ) : null}
-      {feedbackNotice ? (
-        <p className="mt-3 text-sm" role="status">
-          {feedbackNotice}
-        </p>
-      ) : null}
-      {feedback.latestApplicableEventId ? (
-        <button
-          type="button"
-          className="mt-2 min-h-11 self-start px-3 underline"
-          onClick={undoFeedback}
-        >
-          Undo latest feedback
-        </button>
-      ) : null}
-      {!hydrated ? (
-        <p className="mt-6" role="status">
-          Loading saved preferences…
-        </p>
-      ) : (
-        <>
-          {(step === "services" || step === "taste") &&
-          options.type === "loading" ? (
-            <p className="mt-4" role="status">
-              Loading catalog services and genres…
-            </p>
-          ) : null}
-          {(step === "services" || step === "taste") &&
-          options.type === "error" ? (
-            <div className="mt-4">
-              <p role="alert">
-                Catalog options are unavailable. Retry, or skip services and
-                taste to try all catalog titles.
+      <header className="site-header">
+        <div className="brand-lockup">
+          <FilmMark className="brand-mark" />
+          <h1 translate="no">CineMatch</h1>
+        </div>
+        <span className="header-note">
+          <span aria-hidden="true" className="status-dot" />
+          Your next good watch
+        </span>
+      </header>
+      <div className="cinema-layout">
+        <aside className="cinema-intro" aria-label="About CineMatch">
+          <p className="eyebrow">Make a night of it</p>
+          <p className="hero-title">
+            Less scrolling.
+            <br />
+            <em>More watching.</em>
+          </p>
+          <p className="hero-description">
+            Find something to watch in under two minutes.
+          </p>
+          <div className="cinema-art" aria-hidden="true">
+            <div className="art-orbit art-orbit-one" />
+            <div className="art-orbit art-orbit-two" />
+            <div className="art-orbit art-orbit-three" />
+            <div className="cinema-ticket">
+              <FilmMark />
+              <span>Settle in.</span>
+              <span className="ticket-detail">A story for tonight</span>
+              <div className="ticket-perforation" />
+              <span className="ticket-stamp">CM / YOUR EVENING</span>
+            </div>
+            <span className="art-star">✳</span>
+          </div>
+          <p className="privacy-note">
+            Private US catalog · metadata-based matching · no account needed
+          </p>
+        </aside>
+        <div className="flow-workspace">
+          <ol className="flow-progress" aria-label="Recommendation progress">
+            {FLOW_STEPS.map((item, index) => (
+              <li
+                key={item.id}
+                aria-current={step === item.id ? "step" : undefined}
+                data-state={
+                  index < stepIndex
+                    ? "complete"
+                    : index === stepIndex
+                      ? "current"
+                      : "upcoming"
+                }
+              >
+                <span className="progress-number" aria-hidden="true">
+                  {index < stepIndex ? "✓" : `0${index + 1}`}
+                </span>
+                <span>{item.label}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="step-count" aria-live="polite">
+            Step {stepIndex + 1} of {FLOW_STEPS.length} ·{" "}
+            {FLOW_STEPS[stepIndex]?.label}
+          </p>
+          <div className="flow-panel">
+            {migrationNotice ? (
+              <p className="flow-notice" role="status">
+                {migrationNotice}
               </p>
+            ) : null}
+            {storageNotice ? (
+              <p className="flow-notice" role="status">
+                {storageNotice}
+              </p>
+            ) : null}
+            {feedbackNotice ? (
+              <p className="flow-notice" role="status">
+                {feedbackNotice}
+              </p>
+            ) : null}
+            {feedback.latestApplicableEventId ? (
               <button
                 type="button"
-                className="min-h-11 px-3 underline"
-                onClick={() => {
-                  setOptions({ type: "loading" });
-                  setOptionsRetry((value) => value + 1);
-                }}
+                className="button-text"
+                onClick={undoFeedback}
               >
-                Retry catalog options
+                Undo latest feedback
               </button>
-            </div>
-          ) : null}
-          {step === "services" ? (
-            <>
-              <ServicesStep
-                answers={answers}
-                services={services}
-                onToggle={(id) =>
-                  patch({
-                    serviceIds: toggleId(answers.serviceIds, id),
-                    servicesSkipped: false,
-                  })
-                }
-                onSkip={() => {
-                  patch({ serviceIds: [], servicesSkipped: true });
-                  setStep("taste");
-                }}
-                onContinue={() => setStep("taste")}
-                canContinue={servicesReady}
-              />
-              {options.type === "ready" && services.length === 0 ? (
-                <p className="mt-3" role="status">
-                  No subscription providers are available in the catalog yet.
-                  Skip to search all services.
-                </p>
-              ) : null}
-            </>
-          ) : null}
-          {step === "taste" ? (
-            <TasteStep
-              answers={answers}
-              genres={genres}
-              error={tasteError}
-              onToggleSeed={(id) =>
-                patch({
-                  seedIds: toggleId(answers.seedIds, id),
-                  tasteSkipped: false,
-                })
-              }
-              onToggleGenre={(genre) =>
-                patch({
-                  avoidedGenres: toggleId(answers.avoidedGenres, genre),
-                  tasteSkipped: false,
-                })
-              }
-              onSkip={() => {
-                patch({ seedIds: [], avoidedGenres: [], tasteSkipped: true });
-                setStep("tonight");
-              }}
-              onBack={() => setStep("services")}
-              onContinue={() => setStep("tonight")}
-              canContinue={tasteError === null}
-            />
-          ) : null}
-          {step === "tonight" ? (
-            <TonightStep
-              answers={answers}
-              onChange={patch}
-              onBack={() => setStep("taste")}
-              onContinue={() => void showPicks()}
-              canContinue={tonightReady}
-            />
-          ) : null}
-          {step === "picks" ? (
-            <PicksStep
-              source="catalog"
-              phase={phase}
-              onBack={() => leavePicks("tonight")}
-              onEdit={leavePicks}
-              onRetry={() => void showPicks()}
-              onFeedback={recordPickFeedback}
-              onShowMore={showMore}
-              canShowMore={
-                serverResult !== null && !serverResult.exhaustion.exhausted
-              }
-              feedback={feedback}
-            />
-          ) : null}
-          {historyLimit?.recovery === "restart-search" ? (
-            <button
-              type="button"
-              className="mt-3 min-h-11 rounded-lg border px-4"
-              onClick={() => {
-                seenIds.current = [];
-                void showPicks([]);
-              }}
-            >
-              Restart this search (keep saved feedback)
-            </button>
-          ) : null}
-          {historyLimit?.recovery === "undo-feedback" ? (
-            <details open className="mt-4">
-              <summary className="min-h-11 cursor-pointer">
-                Review saved {historyLimit.feedbackKind} feedback
-              </summary>
-              <p className="text-sm">
-                Undo only entries you choose. Catalog IDs identify saved titles;
-                no history is cleared automatically.
+            ) : null}
+            {!hydrated ? (
+              <p className="flow-notice loading-notice" role="status">
+                Loading saved preferences…
               </p>
-              <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto">
-                {snapshot.events
-                  .filter(
-                    (event) =>
-                      event.kind === historyLimit.feedbackKind &&
-                      feedback.appliedEventIds.includes(event.id),
-                  )
-                  .map((event) =>
-                    event.kind !== "undo" ? (
-                      <li
-                        key={event.id}
-                        className="flex items-center justify-between gap-2"
-                      >
-                        <span>
-                          {event.kind} · catalog {event.contentId}
-                        </span>
-                        <button
-                          type="button"
-                          className="min-h-11 px-3 underline"
-                          onClick={() => undoSelectedFeedback(event.id)}
-                        >
-                          Undo {event.kind} for catalog {event.contentId}
-                        </button>
-                      </li>
-                    ) : null,
-                  )}
-              </ul>
-            </details>
-          ) : null}
-        </>
-      )}
+            ) : (
+              <>
+                {(step === "services" || step === "taste") &&
+                options.type === "loading" ? (
+                  <p className="flow-notice loading-notice" role="status">
+                    Loading catalog services and genres…
+                  </p>
+                ) : null}
+                {(step === "services" || step === "taste") &&
+                options.type === "error" ? (
+                  <div className="flow-notice notice-error">
+                    <p role="alert">
+                      Catalog options are unavailable. Retry, or skip services
+                      and taste to try all catalog titles.
+                    </p>
+                    <button
+                      type="button"
+                      className="button-text"
+                      onClick={() => {
+                        setOptions({ type: "loading" });
+                        setOptionsRetry((value) => value + 1);
+                      }}
+                    >
+                      Retry catalog options
+                    </button>
+                  </div>
+                ) : null}
+                {step === "services" ? (
+                  <>
+                    <ServicesStep
+                      answers={answers}
+                      services={services}
+                      onToggle={(id) =>
+                        patch({
+                          serviceIds: toggleId(answers.serviceIds, id),
+                          servicesSkipped: false,
+                        })
+                      }
+                      onSkip={() => {
+                        patch({ serviceIds: [], servicesSkipped: true });
+                        setStep("taste");
+                      }}
+                      onContinue={() => setStep("taste")}
+                      canContinue={servicesReady}
+                    />
+                    {options.type === "ready" && services.length === 0 ? (
+                      <p className="flow-notice" role="status">
+                        No subscription providers are available in the catalog
+                        yet. Skip to search all services.
+                      </p>
+                    ) : null}
+                  </>
+                ) : null}
+                {step === "taste" ? (
+                  <TasteStep
+                    answers={answers}
+                    genres={genres}
+                    error={tasteError}
+                    onToggleSeed={(id) =>
+                      patch({
+                        seedIds: toggleId(answers.seedIds, id),
+                        tasteSkipped: false,
+                      })
+                    }
+                    onToggleGenre={(genre) =>
+                      patch({
+                        avoidedGenres: toggleId(answers.avoidedGenres, genre),
+                        tasteSkipped: false,
+                      })
+                    }
+                    onSkip={() => {
+                      patch({
+                        seedIds: [],
+                        avoidedGenres: [],
+                        tasteSkipped: true,
+                      });
+                      setStep("tonight");
+                    }}
+                    onBack={() => setStep("services")}
+                    onContinue={() => setStep("tonight")}
+                    canContinue={tasteError === null}
+                  />
+                ) : null}
+                {step === "tonight" ? (
+                  <TonightStep
+                    answers={answers}
+                    onChange={patch}
+                    onBack={() => setStep("taste")}
+                    onContinue={() => void showPicks()}
+                    canContinue={tonightReady}
+                  />
+                ) : null}
+                {step === "picks" ? (
+                  <PicksStep
+                    source="catalog"
+                    selectedServiceIds={
+                      answers.servicesSkipped ? [] : answers.serviceIds
+                    }
+                    phase={phase}
+                    onBack={() => leavePicks("tonight")}
+                    onEdit={leavePicks}
+                    onRetry={() => void showPicks()}
+                    onFeedback={recordPickFeedback}
+                    onShowMore={showMore}
+                    canShowMore={
+                      serverResult !== null &&
+                      !serverResult.exhaustion.exhausted
+                    }
+                    feedback={feedback}
+                  />
+                ) : null}
+                {historyLimit?.recovery === "restart-search" ? (
+                  <button
+                    type="button"
+                    className="button-secondary mt-4"
+                    onClick={() => {
+                      seenIds.current = [];
+                      void showPicks([]);
+                    }}
+                  >
+                    Restart this search (keep saved feedback)
+                  </button>
+                ) : null}
+                {historyLimit?.recovery === "undo-feedback" ? (
+                  <details open className="feedback-review">
+                    <summary className="min-h-11 cursor-pointer">
+                      Review saved {historyLimit.feedbackKind} feedback
+                    </summary>
+                    <p className="text-sm">
+                      Undo only entries you choose. Catalog IDs identify saved
+                      titles; no history is cleared automatically.
+                    </p>
+                    <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto">
+                      {snapshot.events
+                        .filter(
+                          (event) =>
+                            event.kind === historyLimit.feedbackKind &&
+                            feedback.appliedEventIds.includes(event.id),
+                        )
+                        .map((event) =>
+                          event.kind !== "undo" ? (
+                            <li
+                              key={event.id}
+                              className="flex items-center justify-between gap-2"
+                            >
+                              <span>
+                                {event.kind} · catalog {event.contentId}
+                              </span>
+                              <button
+                                type="button"
+                                className="button-text"
+                                onClick={() => undoSelectedFeedback(event.id)}
+                              >
+                                Undo {event.kind} for catalog {event.contentId}
+                              </button>
+                            </li>
+                          ) : null,
+                        )}
+                    </ul>
+                  </details>
+                ) : null}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

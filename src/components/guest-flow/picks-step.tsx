@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { FilmMark, PosterPlaceholder, StepHeader } from "./ui";
 import type { DerivedFeedbackState } from "@/lib/guest-persistence";
 import {
   JUSTWATCH_ATTRIBUTION,
@@ -23,6 +24,7 @@ type Phase =
 
 export type PicksStepProps = {
   source?: "mock" | "catalog";
+  selectedServiceIds?: readonly string[];
   canShowMore?: boolean;
   feedback?: DerivedFeedbackState;
   phase: Phase;
@@ -37,6 +39,7 @@ export type PicksStepProps = {
 
 export function PicksStep({
   source = "mock",
+  selectedServiceIds = [],
   canShowMore = true,
   feedback,
   phase,
@@ -47,31 +50,43 @@ export function PicksStep({
   onShowMore,
 }: PicksStepProps) {
   return (
-    <section className="mt-8 min-w-0" aria-labelledby="picks-heading">
-      <h2 id="picks-heading" className="text-xl font-semibold text-pretty">
-        Your picks
-      </h2>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        {source === "mock"
-          ? "Mock catalog only. Not live availability. Watch opens only when a verified link exists on the offer."
-          : "US catalog recommendations. Availability can change. Provider information links are not direct playback links."}
-      </p>
+    <section
+      className="flow-step picks-step min-w-0"
+      aria-labelledby="picks-heading"
+    >
+      <StepHeader
+        id="picks-heading"
+        eyebrow="The evening starts here"
+        title="Your picks"
+      >
+        <p>
+          {source === "mock"
+            ? "Mock catalog only. Not live availability. Watch opens only when a verified link exists on the offer."
+            : "US catalog recommendations. Availability can change. Provider information links are not direct playback links."}
+        </p>
+      </StepHeader>
       {source === "catalog" ? (
-        <p className="mt-2 text-xs text-zinc-500">{JUSTWATCH_ATTRIBUTION}</p>
+        <p className="source-credit">{JUSTWATCH_ATTRIBUTION}</p>
       ) : null}
 
       {phase.type === "loading" ? (
-        <p className="mt-6" role="status">
-          Finding picks
-        </p>
+        <div className="picks-loading">
+          <FilmMark className="loading-film" />
+          <p role="status">Finding picks…</p>
+          <p className="muted-copy">Matching your choices with the catalog.</p>
+          <div className="loading-track" aria-hidden="true">
+            <span />
+          </div>
+        </div>
       ) : null}
 
       {phase.type === "ready" && phase.result.status === "error" ? (
-        <div className="mt-6">
+        <div className="result-state notice-error">
+          <p className="eyebrow">A brief intermission</p>
           <p role="alert">{phase.result.message}</p>
           <button
             type="button"
-            className="mt-4 min-h-11 touch-manipulation rounded-lg bg-zinc-950 px-4 text-white dark:bg-zinc-50 dark:text-zinc-950"
+            className="button-primary mt-4"
             onClick={onRetry}
           >
             Try again
@@ -80,7 +95,9 @@ export function PicksStep({
       ) : null}
 
       {phase.type === "ready" && phase.result.status === "empty" ? (
-        <div className="mt-6 space-y-4">
+        <div className="result-state">
+          <FilmMark className="empty-film" />
+          <p className="eyebrow">Let’s try a different scene</p>
           <p role="status">{phase.result.message}</p>
           <EditRow onEdit={onEdit} />
         </div>
@@ -90,6 +107,7 @@ export function PicksStep({
         <ResultsBody
           result={phase.result}
           source={source}
+          selectedServiceIds={selectedServiceIds}
           canShowMore={canShowMore}
           feedback={feedback}
           onEdit={onEdit}
@@ -98,11 +116,7 @@ export function PicksStep({
         />
       ) : null}
 
-      <button
-        type="button"
-        className="mt-4 min-h-11 touch-manipulation px-4 text-left"
-        onClick={onBack}
-      >
+      <button type="button" className="button-text mt-4" onClick={onBack}>
         Back
       </button>
     </section>
@@ -125,6 +139,7 @@ function hasPicks(result: RecommendResult): result is PicksResult {
 function ResultsBody({
   result,
   source,
+  selectedServiceIds,
   canShowMore,
   feedback,
   onEdit,
@@ -133,6 +148,7 @@ function ResultsBody({
 }: {
   result: PicksResult;
   source: "mock" | "catalog";
+  selectedServiceIds: readonly string[];
   canShowMore: boolean;
   feedback?: DerivedFeedbackState;
   onEdit: (step: FlowStep) => void;
@@ -143,25 +159,31 @@ function ResultsBody({
   const anyStale = allPicks.some((pick) => isPickStale(pick, source));
 
   return (
-    <div className="mt-6 space-y-4">
+    <div className="results-body">
       {result.confidence === "cold-start" ? (
-        <p role="status">
+        <p className="flow-notice" role="status">
           Cold start: lower confidence because no quiz titles were chosen.
         </p>
       ) : (
-        <p role="status">Based on your quiz seeds.</p>
+        <p className="flow-notice" role="status">
+          Based on your quiz seeds.
+        </p>
       )}
 
       {result.status === "shortage" ? (
-        <p role="status">{result.message}</p>
+        <p className="flow-notice" role="status">
+          {result.message}
+        </p>
       ) : null}
 
       {result.status === "unavailable" ? (
-        <p role="status">{result.message}</p>
+        <p className="flow-notice" role="status">
+          {result.message}
+        </p>
       ) : null}
 
       {anyStale ? (
-        <p role="status">
+        <p className="flow-notice" role="status">
           {source === "mock"
             ? "Availability looks stale (checked more than 7 days before the mock clock). Treat service info as outdated until refreshed."
             : "Availability looks stale. Service offers need refreshing; they are not shown as current subscriptions."}
@@ -173,19 +195,21 @@ function ResultsBody({
         pick={result.best}
         emphasize
         source={source}
+        selectedServiceIds={selectedServiceIds}
         feedback={feedback}
         onFeedback={onFeedback}
       />
 
       {result.alternatives.length > 0 ? (
-        <div>
-          <h3 className="font-medium">Alternatives</h3>
-          <div className="mt-3 space-y-3">
+        <div className="alternatives-section">
+          <h3>Alternatives</h3>
+          <div className="alternatives-grid">
             {result.alternatives.map((pick) => (
               <PickCard
                 key={pick.id}
                 pick={pick}
                 source={source}
+                selectedServiceIds={selectedServiceIds}
                 feedback={feedback}
                 onFeedback={onFeedback}
               />
@@ -196,10 +220,10 @@ function ResultsBody({
         <p>No alternatives fit.</p>
       )}
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+      <div className="feedback-actions">
         <button
           type="button"
-          className="min-h-11 touch-manipulation rounded-lg border border-zinc-300 px-4 disabled:opacity-40 dark:border-zinc-700"
+          className="button-secondary min-h-11 touch-manipulation"
           disabled={!canShowMore}
           onClick={() => onShowMore?.()}
         >
@@ -224,6 +248,7 @@ function PickCard({
   emphasize,
   onFeedback,
   source,
+  selectedServiceIds,
   feedback,
 }: {
   heading?: string;
@@ -231,6 +256,7 @@ function PickCard({
   emphasize?: boolean;
   onFeedback?: (pickId: string, action: PickFeedbackAction) => void;
   source: "mock" | "catalog";
+  selectedServiceIds: readonly string[];
   feedback?: DerivedFeedbackState;
 }) {
   const subscriptions = pick.offers.filter(
@@ -247,107 +273,103 @@ function PickCard({
 
   return (
     <article
-      className={[
-        "min-w-0 rounded-lg border p-3",
-        emphasize
-          ? "border-zinc-950 ring-1 ring-zinc-950 dark:border-zinc-50 dark:ring-zinc-50"
-          : "border-zinc-200 dark:border-zinc-800",
-      ].join(" ")}
+      className={`pick-card min-w-0 ${emphasize ? "pick-featured" : ""}`}
     >
       {heading ? (
-        <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-          {heading}
+        <h3 className="match-label">
+          <span aria-hidden="true">✳</span> {heading}
         </h3>
       ) : null}
-      {pick.posterUrl ? (
-        <Image
-          src={pick.posterUrl}
-          alt=""
-          width={72}
-          height={108}
-          unoptimized
-          className="mt-3 rounded object-cover"
-        />
-      ) : null}
-      <p
-        className={[
-          "font-semibold text-pretty",
-          heading ? "mt-1" : "",
-          emphasize ? "text-lg" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        {pick.title}{" "}
-        {pick.year !== null ? (
-          <span className="font-normal text-zinc-500">({pick.year})</span>
-        ) : null}
-      </p>
-      <p className="mt-1 text-sm">{pick.timeLabel}</p>
-      <p className="mt-2 text-sm text-pretty">{pick.reason}</p>
-
-      <OfferLists
-        subscriptions={subscriptions}
-        rentBuy={rentBuy}
-        freeOffers={freeOffers}
-        stale={stale}
-        unavailable={
-          source === "catalog" && pick.availability?.state !== "current"
-        }
-      />
-
-      <div className="mt-3 flex flex-col gap-2">
-        {verifiedWatchUrl ? (
-          <a
-            href={verifiedWatchUrl}
-            className="inline-flex min-h-11 touch-manipulation items-center justify-center rounded-lg bg-zinc-950 px-4 text-center text-white dark:bg-zinc-50 dark:text-zinc-950"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Watch
-          </a>
-        ) : (
-          <p className="text-sm text-zinc-600 dark:text-zinc-400" role="status">
-            {source === "mock"
-              ? "Watch unavailable — no verified playback link on this mock offer."
-              : "Direct Watch unavailable: no verified playback link. Check availability with the provider."}
+      <div className="pick-layout">
+        <div className="pick-poster">
+          {pick.posterUrl ? (
+            <Image
+              src={pick.posterUrl}
+              alt=""
+              width={240}
+              height={360}
+              unoptimized
+              className="poster-image"
+            />
+          ) : (
+            <PosterPlaceholder />
+          )}
+        </div>
+        <div className="pick-content">
+          <p className="pick-meta">
+            {pick.format === "movie" ? "Movie" : "Series"}
+            {pick.year !== null ? ` · ${pick.year}` : ""} · {pick.timeLabel}
           </p>
-        )}
-        {source === "catalog" && pick.availability?.infoUrl ? (
-          <a
-            href={pick.availability.infoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center underline"
-          >
-            {availabilityLinkLabel("provider-info")}
-          </a>
-        ) : null}
-        {source === "catalog" && pick.availability ? (
-          <p className="text-xs text-zinc-500">
-            Availability {pick.availability.state}
-            {pick.availability.checkedAt
-              ? ` · checked ${formatCheckedAt(pick.availability.checkedAt)}`
-              : " · never verified"}
-          </p>
-        ) : null}
+          <h4 className="pick-title">{pick.title}</h4>
+          <p className="pick-reason">{pick.reason}</p>
+          <OfferLists
+            subscriptions={subscriptions}
+            selectedServiceIds={selectedServiceIds}
+            rentBuy={rentBuy}
+            freeOffers={freeOffers}
+            stale={stale}
+            unavailable={
+              source === "catalog" && pick.availability?.state !== "current"
+            }
+          />
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          <FeedbackButton
-            label="Watched"
-            disabled={feedback?.suppressedContentIds.includes(pick.id)}
-            onClick={() => onFeedback?.(pick.id, "watched")}
-          />
-          <FeedbackButton
-            label="Like"
-            disabled={feedback?.likedContentIds.includes(pick.id)}
-            onClick={() => onFeedback?.(pick.id, "like")}
-          />
-          <FeedbackButton
-            label="Not for me"
-            disabled={feedback?.dislikedContentIds.includes(pick.id)}
-            onClick={() => onFeedback?.(pick.id, "not-for-me")}
-          />
+          <div className="pick-links">
+            {verifiedWatchUrl ? (
+              <a
+                href={verifiedWatchUrl}
+                className="button-primary"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                Watch
+              </a>
+            ) : (
+              <p className="playback-note" role="status">
+                {source === "mock"
+                  ? "Watch unavailable — no verified playback link on this mock offer."
+                  : "Direct Watch unavailable: no verified playback link. Check availability with the provider."}
+              </p>
+            )}
+            {source === "catalog" && pick.availability?.infoUrl ? (
+              <a
+                href={pick.availability.infoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="provider-link"
+              >
+                {availabilityLinkLabel("provider-info")}
+                <span className="provider-external-icon" aria-hidden="true">
+                  ↗
+                </span>
+              </a>
+            ) : null}
+            {source === "catalog" && pick.availability ? (
+              <p className="availability-note">
+                Availability {pick.availability.state}
+                {pick.availability.checkedAt
+                  ? ` · checked ${formatCheckedAt(pick.availability.checkedAt)}`
+                  : " · never verified"}
+              </p>
+            ) : null}
+
+            <div className="feedback-actions">
+              <FeedbackButton
+                label="Watched"
+                disabled={feedback?.suppressedContentIds.includes(pick.id)}
+                onClick={() => onFeedback?.(pick.id, "watched")}
+              />
+              <FeedbackButton
+                label="Like"
+                disabled={feedback?.likedContentIds.includes(pick.id)}
+                onClick={() => onFeedback?.(pick.id, "like")}
+              />
+              <FeedbackButton
+                label="Not for me"
+                disabled={feedback?.dislikedContentIds.includes(pick.id)}
+                onClick={() => onFeedback?.(pick.id, "not-for-me")}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </article>
@@ -356,39 +378,56 @@ function PickCard({
 
 function OfferLists({
   subscriptions,
+  selectedServiceIds,
   rentBuy,
   freeOffers,
   stale,
   unavailable,
 }: {
   subscriptions: ServiceOffer[];
+  selectedServiceIds: readonly string[];
   rentBuy: ServiceOffer[];
   freeOffers: ServiceOffer[];
   stale: boolean;
   unavailable: boolean;
 }) {
   return (
-    <div className="mt-3 space-y-2 text-sm">
+    <div className="offer-lists">
       <div>
-        <p className="font-medium">Subscription (included)</p>
+        <p className="offer-heading">Subscription (included)</p>
         {subscriptions.length > 0 ? (
-          <ul
-            aria-label="Subscription (included)"
-            className="mt-1 list-inside list-disc"
-          >
-            {subscriptions.map((offer) => (
-              <li key={`${offer.serviceId}-${offer.access}`}>
-                {offer.serviceName}
-                <span className="text-zinc-500">
-                  {" "}
-                  · checked {formatCheckedAt(offer.freshnessCheckedAt)}
-                  {stale ? " · stale" : ""}
-                </span>
-              </li>
-            ))}
+          <ul aria-label="Subscription (included)" className="offer-list">
+            {[...subscriptions]
+              .sort(
+                (a, b) =>
+                  Number(selectedServiceIds.includes(b.serviceId)) -
+                  Number(selectedServiceIds.includes(a.serviceId)),
+              )
+              .map((offer) => (
+                <li
+                  key={`${offer.serviceId}-${offer.access}`}
+                  className={
+                    selectedServiceIds.includes(offer.serviceId)
+                      ? "selected-offer"
+                      : undefined
+                  }
+                >
+                  {offer.serviceName}
+                  {selectedServiceIds.includes(offer.serviceId) ? (
+                    <span className="selected-offer-label">
+                      Your selected service
+                    </span>
+                  ) : null}
+                  <span className="offer-date">
+                    {" "}
+                    · checked {formatCheckedAt(offer.freshnessCheckedAt)}
+                    {stale ? " · stale" : ""}
+                  </span>
+                </li>
+              ))}
           </ul>
         ) : (
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+          <p className="offer-empty">
             {unavailable
               ? "Subscription availability is not currently verified."
               : "No included subscription on selected US services."}
@@ -396,16 +435,13 @@ function OfferLists({
         )}
       </div>
       <div>
-        <p className="font-medium">Rent or buy (not included)</p>
+        <p className="offer-heading">Rent or buy (not included)</p>
         {rentBuy.length > 0 ? (
-          <ul
-            aria-label="Rent or buy (not included)"
-            className="mt-1 list-inside list-disc"
-          >
+          <ul aria-label="Rent or buy (not included)" className="offer-list">
             {rentBuy.map((offer) => (
               <li key={`${offer.serviceId}-${offer.access}`}>
                 {offer.serviceName}: {offer.access}
-                <span className="text-zinc-500">
+                <span className="offer-date">
                   {" "}
                   · checked {formatCheckedAt(offer.freshnessCheckedAt)}
                 </span>
@@ -413,7 +449,7 @@ function OfferLists({
             ))}
           </ul>
         ) : (
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+          <p className="offer-empty">
             {unavailable
               ? "Rent or buy availability is not currently verified."
               : "No rent or buy options listed for this title."}
@@ -422,13 +458,10 @@ function OfferLists({
       </div>
       {freeOffers.length > 0 ? (
         <div>
-          <p className="font-medium">
+          <p className="offer-heading">
             Free or ad-supported (not a subscription)
           </p>
-          <ul
-            aria-label="Free or ad-supported"
-            className="mt-1 list-inside list-disc"
-          >
+          <ul aria-label="Free or ad-supported" className="offer-list">
             {freeOffers.map((offer) => (
               <li key={`${offer.serviceId}-${offer.access}`}>
                 {offer.serviceName}:{" "}
@@ -456,7 +489,7 @@ function FeedbackButton({
     <button
       type="button"
       disabled={disabled}
-      className="min-h-11 touch-manipulation rounded-lg border border-zinc-300 px-4 disabled:opacity-40 dark:border-zinc-700"
+      className="button-secondary min-h-11 touch-manipulation"
       onClick={onClick}
     >
       {label}
@@ -466,24 +499,24 @@ function FeedbackButton({
 
 function EditRow({ onEdit }: { onEdit: (step: FlowStep) => void }) {
   return (
-    <div className="flex flex-col gap-2" aria-label="Edit constraints">
+    <div className="edit-row" aria-label="Edit constraints">
       <button
         type="button"
-        className="min-h-11 touch-manipulation text-left"
+        className="button-text"
         onClick={() => onEdit("services")}
       >
         Edit services
       </button>
       <button
         type="button"
-        className="min-h-11 touch-manipulation text-left"
+        className="button-text"
         onClick={() => onEdit("taste")}
       >
         Edit taste
       </button>
       <button
         type="button"
-        className="min-h-11 touch-manipulation text-left"
+        className="button-text"
         onClick={() => onEdit("tonight")}
       >
         Edit tonight

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "Find a movie or series to watch in under two minutes.",
 };
 
+export const viewport: Viewport = { themeColor: "#101313" };
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -25,11 +27,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         {children}
-        <footer className="mt-auto px-6 py-4 text-center text-xs text-zinc-600 dark:text-zinc-400">
-          <Link href="/about" className="underline">
-            About &amp; credits
-          </Link>
+        <footer className="site-footer">
+          <span>Good stories. Your kind of evening.</span>
+          <Link href="/about">About &amp; credits</Link>
         </footer>
       </body>
     </html>
