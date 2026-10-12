@@ -1,6 +1,7 @@
 // Catalog backfill CLI (issue #6). Usage:
 //   npm run catalog:ingest -- [--movies 20000] [--series 5000] [--max-age-days 7]
 //     [--concurrency 8] [--from-year 1950] [--to-year <this year>]
+//     [--max-pages-per-partition 1] (optional bounded bootstrap)
 // Reads DATABASE_URL and TMDB_API_KEY from the environment or .env.local.
 // Safe to re-run: titles fetched within --max-age-days are skipped.
 import { parseArgs } from "node:util";
@@ -13,6 +14,7 @@ import {
   type IngestReport,
 } from "../src/catalog/ingest";
 import { createCatalogStore } from "../src/catalog/store";
+import { validateDiscoveryPageLimit } from "../src/catalog/discover";
 import { resolveDatabaseUrl } from "../src/db/database-url";
 import * as schema from "../src/db/schema";
 import { createTmdbClient } from "../src/tmdb/client";
@@ -46,6 +48,7 @@ async function main() {
       concurrency: { type: "string" },
       "from-year": { type: "string" },
       "to-year": { type: "string" },
+      "max-pages-per-partition": { type: "string" },
     },
   });
   const d = DEFAULT_INGEST_OPTIONS;
@@ -60,10 +63,19 @@ async function main() {
     ),
     fromYear: intFlag(values["from-year"], d.fromYear, "from-year"),
     toYear: intFlag(values["to-year"], d.toYear, "to-year"),
+    maxPagesPerPartition:
+      values["max-pages-per-partition"] === undefined
+        ? undefined
+        : intFlag(
+            values["max-pages-per-partition"],
+            1,
+            "max-pages-per-partition",
+          ),
     log: (message: string) =>
       console.log(`${new Date().toISOString()} ${message}`),
   };
 
+  validateDiscoveryPageLimit(options.maxPagesPerPartition);
   const sql = postgres(resolveDatabaseUrl(), {
     max: options.concurrency + 1,
     onnotice: () => {},

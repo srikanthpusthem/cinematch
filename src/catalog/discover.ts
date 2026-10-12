@@ -2,7 +2,11 @@
 // (10k results) per query, so reaching 20k+ titles requires partitioning:
 // one query per release year (plus one for everything older), each sorted by
 // vote count. Candidates are then ranked globally and cut to the target.
-import type { CatalogSource, QueryParams } from "../tmdb/client";
+import {
+  TMDB_MAX_PAGE,
+  type CatalogSource,
+  type QueryParams,
+} from "../tmdb/client";
 import type { TitleKind } from "./store";
 
 export interface Candidate {
@@ -20,6 +24,8 @@ export interface DiscoverOptions {
   toYear: number;
   /** Oldest year queried individually; earlier titles share one query. */
   fromYear: number;
+  /** Optional per-partition discovery budget for a bounded initial catalog. */
+  maxPagesPerPartition?: number;
 }
 
 /** The discover query partitions, newest first. Exported for tests. */
@@ -47,16 +53,31 @@ export function discoverPartitions({
   return partitions;
 }
 
+export function validateDiscoveryPageLimit(limit: number | undefined): void {
+  if (
+    limit !== undefined &&
+    (!Number.isInteger(limit) || limit < 1 || limit > TMDB_MAX_PAGE)
+  ) {
+    throw new Error(
+      `maxPagesPerPartition must be an integer from 1 to ${TMDB_MAX_PAGE}`,
+    );
+  }
+}
+
 export async function discoverCandidates(
   source: CatalogSource,
   options: DiscoverOptions,
 ): Promise<Candidate[]> {
+  const limit = options.maxPagesPerPartition;
+  validateDiscoveryPageLimit(limit);
+  const pagination = limit === undefined ? undefined : { maxPages: limit };
   const byId = new Map<number, Candidate>();
   for (const params of discoverPartitions(options)) {
     const pages =
       options.kind === "movie"
-        ? source.discoverMovies(params)
-        : source.discoverSeries(params);
+        ? source.discoverMovies(params, pagination)
+        : source.discoverSeries(params, pagination);
+    let consumedPages = 0;
     for await (const page of pages) {
       for (const item of page.results) {
         if (!byId.has(item.id)) {
@@ -67,6 +88,8 @@ export async function discoverCandidates(
           });
         }
       }
+      // Enforce the bound at this boundary too, even if an injected source ignores it.
+      if (limit !== undefined && ++consumedPages >= limit) break;
     }
   }
   // Most-voted first; tmdb id breaks ties so runs are deterministic.

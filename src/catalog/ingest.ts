@@ -20,6 +20,8 @@ export interface IngestOptions {
   minVotes: { movie: number; series: number };
   fromYear: number;
   toYear: number;
+  /** Optional page budget for each release-year/older discovery partition. */
+  maxPagesPerPartition?: number;
   /** Abort when failures exceed this share of attempts (after `minAttempts`). */
   maxFailureRate: number;
   minAttemptsBeforeAbort: number;
@@ -121,6 +123,7 @@ export async function ingestCatalog(
       minVotes: options.minVotes[kind],
       fromYear: options.fromYear,
       toYear: options.toYear,
+      maxPagesPerPartition: options.maxPagesPerPartition,
     });
     report.candidates = candidates.length;
 

@@ -95,7 +95,7 @@ npm run test:db       # apply migrations twice and verify pgvector + the migrati
 
 drizzle-kit reads `DATABASE_URL` from `.env.local` (see `src/db/database-url.ts`). A non-empty `DATABASE_URL` set in the shell environment takes precedence, e.g. `DATABASE_URL=postgresql://... npm run db:migrate` to target another database. If neither is set, the command fails with a message pointing at `.env.example`. Quote the value if it contains `#` (for example in a password), since an unquoted `#` starts a comment; the loader rejects that case rather than silently truncating the URL.
 
-`npm run test:db` must target a disposable test database, never the private live catalog. It needs a running pgvector Postgres (`docker compose up -d`) and is not part of `npm run test`. CI runs it against a fresh `pgvector/pgvector:pg16` service on every pull request (the `db` job in `.github/workflows/ci.yml`).
+`npm run test:db` deletes catalog data and must target a disposable **local** test database, never the private live catalog or live Neon database. Before any DB suite runs, a safety check rejects remote hosts and accepts only `postgres://` or `postgresql://` URLs with the exact host `localhost`, `127.0.0.1` or `[::1]`, without query parameters or fragments. A local address alone does not make a database disposable: do not point it at valuable local data or a tunnel to a remote database. It needs a running pgvector Postgres (`docker compose up -d`) and is not part of `npm run test`. CI runs it against a fresh `pgvector/pgvector:pg16` service on every pull request (the `db` job in `.github/workflows/ci.yml`).
 
 ## Catalog ingestion
 
@@ -103,7 +103,19 @@ drizzle-kit reads `DATABASE_URL` from `.env.local` (see `src/db/database-url.ts`
 
 ```bash
 npm run catalog:ingest                          # defaults: 20000 movies, 5000 series
-npm run catalog:ingest -- --movies 200 --series 50   # small trial run
+npm run catalog:ingest -- --movies 200 --series 50 --from-year 2010 --to-year 2026 --max-pages-per-partition 1
 ```
 
-Flags: `--movies`, `--series`, `--max-age-days` (default 7), `--concurrency` (default 8), `--from-year` (default 1950) and `--to-year`. The job is safe to re-run: titles fetched within `--max-age-days` are skipped, so an interrupted run resumes where it stopped. It prints a summary and a JSON report (counts, failures, freshness), never keys or connection strings. It exits non-zero if it aborts: on an invalid API key, or when more than 5% of detail requests fail. Expect roughly 25 minutes for a full run at the client's default of 20 requests per second.
+Flags: `--movies`, `--series`, `--max-age-days` (default 7), `--concurrency` (default 8), `--from-year` (default 1950) and `--to-year`. Optional `--max-pages-per-partition` (1–500) bounds discovery for each year plus the older-title bucket; omitted, discovery retains its full existing pagination. Movie/series targets alone do not limit discovery requests. A bounded run ranks only its sampled pages, so it can produce fewer titles and is not a full-catalog backfill. The job is safe to re-run: titles fetched within `--max-age-days` are skipped, so an interrupted run resumes where it stopped. It prints a summary and a JSON report (counts, failures, freshness), never keys or connection strings. It exits non-zero if it aborts: on an invalid API key, or when more than 5% of detail requests fail. Expect roughly 25 minutes for a full run at the client's default of 20 requests per second.
+
+### One-time private bootstrap
+
+After the existing schema has been applied and `DATABASE_URL` plus `TMDB_API_KEY` have been entered securely in the deployment environment, this can be used as a **one-time** build command:
+
+```bash
+npm run catalog:ingest -- --movies 200 --series 50 --from-year 2010 --to-year 2026 --max-pages-per-partition 1 --concurrency 2 --max-age-days 7 && npm run catalog:availability -- --limit 250 --concurrency 2 --max-age-days 1 && npm run catalog:audit -- --stale-hours 48 && npm run build
+```
+
+For this fixed year range, discovery consumes at most 36 pages (17 years plus one older bucket, for each kind), followed by at most 250 detail requests and 250 availability requests. The client may retry a failed request up to three times. Invalid page bounds and discovery failures stop the command; systemic detail/availability failures abort under the existing failure budgets. Individual failures, missing titles and eligibility skips can still leave fewer than 200 movies/50 series, so inspect the JSON summaries, audit counts and live results. Audit errors stop the build; warnings and unmet full-catalog targets do not. No secrets belong in this command or repository.
+
+Restore the ordinary `npm run build` command after the bootstrap succeeds. Each title/availability update commits independently: a later failure does not undo earlier writes, and reruns skip fresh records. This is not a scheduled availability refresh; current offers expire after 48 hours and need another authorized refresh. Never run `npm run test:db` against this live database.

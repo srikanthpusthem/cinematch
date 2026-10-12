@@ -180,9 +180,18 @@ test("empty, shortage, and error states stay honest", async ({ page }) => {
   await skipToTonight(page);
   await chooseComfortMovie(page);
   await page.getByRole("button", { name: "See picks" }).click();
+  const errorResults = page.getByRole("region", { name: "Your picks" });
+  await expect(errorResults.getByRole("alert")).toBeVisible();
+  await expect(errorResults.getByRole("alert")).toHaveText(
+    "Recommendations are unavailable. Please try again.",
+  );
+  // The client deliberately replaces upstream error text with safe copy.
   await expect(
-    page.getByRole("alert").filter({ hasText: "could not be loaded" }),
-  ).toBeVisible();
+    errorResults.getByText(
+      "Catalog recommendations could not be loaded. Please try again.",
+    ),
+  ).toHaveCount(0);
+  await expect(errorResults.getByRole("article")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
 });
 
