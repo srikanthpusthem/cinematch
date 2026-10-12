@@ -1,5 +1,11 @@
 import { formatRuntime } from "@/lib/runtime";
-import { CATALOG, QUIZ_SEEDS, type CatalogTitle } from "./fixtures";
+import {
+  CATALOG,
+  FIXTURE_FRESH_CHECKED_AT,
+  FIXTURE_STALE_CHECKED_AT,
+  QUIZ_SEEDS,
+  type CatalogTitle,
+} from "./fixtures";
 import {
   SERVICE_OPTIONS,
   movieLengthMatches,
@@ -16,6 +22,8 @@ const EMPTY_MESSAGE =
   "Nothing in the mock catalog fits these constraints. Edit a step instead of widening them automatically.";
 const ERROR_MESSAGE =
   "The mock picker failed before choosing titles. No picks were invented.";
+const UNAVAILABLE_MESSAGE =
+  "These mock titles have no verified Watch link and no included subscription. Rent or buy may still appear, separately labeled.";
 
 export async function getQuizSeeds(): Promise<typeof QUIZ_SEEDS> {
   return QUIZ_SEEDS;
@@ -42,11 +50,23 @@ function serviceName(id: GuestAnswers["serviceIds"][number]): string {
   return SERVICE_OPTIONS.find((service) => service.id === id)?.name ?? id;
 }
 
-function toOffer(offer: CatalogTitle["offers"][number]): ServiceOffer {
+function toOffer(
+  offer: CatalogTitle["offers"][number],
+  options?: { forceStale?: boolean; stripVerified?: boolean },
+): ServiceOffer {
+  const freshnessCheckedAt = options?.forceStale
+    ? FIXTURE_STALE_CHECKED_AT
+    : (offer.freshnessCheckedAt ?? FIXTURE_FRESH_CHECKED_AT);
+  const verifiedWatchUrl =
+    options?.stripVerified || !offer.verifiedWatchUrl
+      ? undefined
+      : offer.verifiedWatchUrl;
   return {
     serviceId: offer.serviceId,
     serviceName: serviceName(offer.serviceId),
     access: offer.access,
+    freshnessCheckedAt,
+    ...(verifiedWatchUrl ? { verifiedWatchUrl } : {}),
   };
 }
 
@@ -104,13 +124,14 @@ function eligible(title: CatalogTitle, answers: GuestAnswers): boolean {
 function visibleOffers(
   title: CatalogTitle,
   answers: GuestAnswers,
+  options?: { forceStale?: boolean; stripVerified?: boolean },
 ): ServiceOffer[] {
   const offers = answers.servicesSkipped
     ? title.offers
     : title.offers.filter((offer) =>
         answers.serviceIds.includes(offer.serviceId),
       );
-  return offers.map(toOffer);
+  return offers.map((offer) => toOffer(offer, options));
 }
 
 function timeLabel(title: CatalogTitle): string {
@@ -146,6 +167,7 @@ function reason(title: CatalogTitle, answers: GuestAnswers): string {
 function toRecommendation(
   title: CatalogTitle,
   answers: GuestAnswers,
+  options?: { forceStale?: boolean; stripVerified?: boolean },
 ): Recommendation {
   return {
     role: "recommendation",
@@ -155,18 +177,34 @@ function toRecommendation(
     format: title.format,
     timeLabel: timeLabel(title),
     reason: reason(title, answers),
-    offers: visibleOffers(title, answers),
+    offers: visibleOffers(title, answers, options),
   };
 }
 
 function fromMatches(
   matches: CatalogTitle[],
   answers: GuestAnswers,
+  options?: {
+    forceStale?: boolean;
+    stripVerified?: boolean;
+    asUnavailable?: boolean;
+  },
 ): RecommendResult {
   const confidence = answers.seedIds.length >= 3 ? "seeded" : "cold-start";
-  const picks = matches.map((title) => toRecommendation(title, answers));
+  const picks = matches.map((title) =>
+    toRecommendation(title, answers, options),
+  );
   const best = picks[0];
   if (!best) return { status: "empty", message: EMPTY_MESSAGE };
+  if (options?.asUnavailable) {
+    return {
+      status: "unavailable",
+      confidence,
+      message: UNAVAILABLE_MESSAGE,
+      best,
+      alternatives: picks.slice(1, 5),
+    };
+  }
   if (picks.length < 5) {
     return {
       status: "shortage",
@@ -231,5 +269,14 @@ export async function mockRecommend(
     (a, b) => a.title.localeCompare(b.title),
   );
   if (mode === "shortage") return fromMatches(matches.slice(0, 2), answers);
+  if (mode === "stale") {
+    return fromMatches(matches, answers, { forceStale: true });
+  }
+  if (mode === "unavailable") {
+    return fromMatches(matches, answers, {
+      stripVerified: true,
+      asUnavailable: true,
+    });
+  }
   return fromMatches(matches, answers);
 }
