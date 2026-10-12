@@ -15,6 +15,7 @@ import {
 import { ServicesStep } from "@/components/guest-flow/services-step";
 import { TasteStep } from "@/components/guest-flow/taste-step";
 import { TonightStep } from "@/components/guest-flow/tonight-step";
+import { isTonightComplete } from "@/lib/guest-flow/tonight";
 import { PicksStep } from "@/components/guest-flow/picks-step";
 
 type Phase =
@@ -91,12 +92,7 @@ export function GuestFlow() {
   const servicesReady =
     answers.servicesSkipped || answers.serviceIds.length > 0;
   const tasteReady = tasteError == null;
-  const tonightReady =
-    answers.mood != null &&
-    answers.format != null &&
-    (answers.format === "movie"
-      ? answers.movieLength != null
-      : answers.seriesLength != null);
+  const tonightReady = isTonightComplete(answers);
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-8 text-zinc-950 sm:px-6 dark:text-zinc-50">
