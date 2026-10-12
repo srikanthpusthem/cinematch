@@ -24,6 +24,8 @@ export const QUIZ_SEEDS: SeedTitle[] = [
     id: "seed-budapest",
     title: "The Grand Budapest Hotel",
     year: 2014,
+    posterUrl:
+      "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2780%27%20height=%27120%27%3E%3Crect%20width=%2780%27%20height=%27120%27%20fill=%27%23c4a35a%27/%3E%3C/svg%3E",
     genres: ["Comedy"],
   },
   {
@@ -31,6 +33,8 @@ export const QUIZ_SEEDS: SeedTitle[] = [
     id: "seed-mad-max",
     title: "Mad Max: Fury Road",
     year: 2015,
+    posterUrl:
+      "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2780%27%20height=%27120%27%3E%3Crect%20width=%2780%27%20height=%27120%27%20fill=%27%237a1f1f%27/%3E%3C/svg%3E",
     genres: ["Action"],
   },
   {
@@ -38,6 +42,8 @@ export const QUIZ_SEEDS: SeedTitle[] = [
     id: "seed-spirited",
     title: "Spirited Away",
     year: 2001,
+    posterUrl:
+      "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2780%27%20height=%27120%27%3E%3Crect%20width=%2780%27%20height=%27120%27%20fill=%27%233d7ea6%27/%3E%3C/svg%3E",
     genres: ["Animation"],
   },
   {
@@ -45,6 +51,8 @@ export const QUIZ_SEEDS: SeedTitle[] = [
     id: "seed-social",
     title: "The Social Network",
     year: 2010,
+    posterUrl:
+      "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2780%27%20height=%27120%27%3E%3Crect%20width=%2780%27%20height=%27120%27%20fill=%27%232c2c2c%27/%3E%3C/svg%3E",
     genres: ["Drama"],
   },
   {
@@ -52,6 +60,7 @@ export const QUIZ_SEEDS: SeedTitle[] = [
     id: "seed-get-out",
     title: "Get Out",
     year: 2017,
+    posterUrl: null,
     genres: ["Horror"],
   },
   {
@@ -59,6 +68,8 @@ export const QUIZ_SEEDS: SeedTitle[] = [
     id: "seed-parks",
     title: "Parks and Recreation",
     year: 2009,
+    posterUrl:
+      "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2780%27%20height=%27120%27%3E%3Crect%20width=%2780%27%20height=%27120%27%20fill=%27%235b8c5a%27/%3E%3C/svg%3E",
     genres: ["Comedy"],
   },
   {
@@ -66,6 +77,8 @@ export const QUIZ_SEEDS: SeedTitle[] = [
     id: "seed-arrival",
     title: "Arrival",
     year: 2016,
+    posterUrl:
+      "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2780%27%20height=%27120%27%3E%3Crect%20width=%2780%27%20height=%27120%27%20fill=%27%231a3a5c%27/%3E%3C/svg%3E",
     genres: ["Science Fiction"],
   },
   {
@@ -73,6 +86,7 @@ export const QUIZ_SEEDS: SeedTitle[] = [
     id: "seed-booksmart",
     title: "Booksmart",
     year: 2019,
+    posterUrl: null,
     genres: ["Comedy"],
   },
 ];

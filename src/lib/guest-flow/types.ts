@@ -127,6 +127,8 @@ export type SeedTitle = {
   title: string;
   year: number;
   genres: string[];
+  /** Fixture poster URL; null means show the missing-poster fallback. */
+  posterUrl: string | null;
 };
 
 export type ServiceOffer = {
