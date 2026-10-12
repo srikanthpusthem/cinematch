@@ -315,3 +315,69 @@ export const titleEmbeddings = pgTable(
     ),
   ],
 );
+
+export const lifecycleStatus = pgEnum("lifecycle_status", [
+  "active",
+  "unavailable",
+  "tombstoned",
+]);
+
+export const tombstoneReason = pgEnum("tombstone_reason", [
+  "source_deleted",
+  "source_id_collision",
+]);
+
+/**
+ * Source lifecycle per title (issue #70; rules in src/catalog/lifecycle.ts).
+ * No row means the title hasn't been observed by a lifecycle run yet and is
+ * treated as active. Titles are never deleted by the lifecycle; the stable
+ * titles.id keeps feedback references valid across tombstone/restore.
+ */
+export const titleLifecycle = pgTable(
+  "title_lifecycle",
+  {
+    titleId: bigint("title_id", { mode: "number" })
+      .primaryKey()
+      .references(() => titles.id, { onDelete: "cascade" }),
+    status: lifecycleStatus("status").notNull(),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).notNull(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull(),
+    lastSuccessfulRefreshAt: timestamp("last_successful_refresh_at", {
+      withTimezone: true,
+    }),
+    lastObservedAt: timestamp("last_observed_at", {
+      withTimezone: true,
+    }).notNull(),
+    lastObservationRunId: text("last_observation_run_id").notNull(),
+    missingSince: timestamp("missing_since", { withTimezone: true }),
+    consecutiveMissing: smallint("consecutive_missing").notNull().default(0),
+    tombstonedAt: timestamp("tombstoned_at", { withTimezone: true }),
+    tombstoneReason: tombstoneReason("tombstone_reason"),
+    restoredAt: timestamp("restored_at", { withTimezone: true }),
+    restoreCount: smallint("restore_count").notNull().default(0),
+  },
+  (t) => [
+    check(
+      "title_lifecycle_counts_nonnegative",
+      sql`${t.consecutiveMissing} >= 0 and ${t.restoreCount} >= 0`,
+    ),
+    check(
+      "title_lifecycle_run_id_not_blank",
+      sql`btrim(${t.lastObservationRunId}) <> ''`,
+    ),
+    // Tombstone fields are set exactly when tombstoned.
+    check(
+      "title_lifecycle_tombstone_consistent",
+      sql`(${t.status} = 'tombstoned') = (${t.tombstonedAt} is not null and ${t.tombstoneReason} is not null)`,
+    ),
+    // Active means nothing is currently missing.
+    check(
+      "title_lifecycle_active_not_missing",
+      sql`${t.status} <> 'active' or (${t.missingSince} is null and ${t.consecutiveMissing} = 0)`,
+    ),
+    // Operator queries and purge-eligibility scans: tombstoned, oldest first.
+    index("title_lifecycle_tombstoned_idx")
+      .on(t.tombstonedAt)
+      .where(sql`${t.status} = 'tombstoned'`),
+  ],
+);
