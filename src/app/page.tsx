@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <Suspense
       fallback={
-        <main className="flex flex-1 items-center justify-center bg-zinc-50 px-6 py-16 text-center dark:bg-black">
+        <main id="main-content" tabIndex={-1} className="app-loading">
           <h1 className="text-4xl font-semibold tracking-tight">CineMatch</h1>
         </main>
       }

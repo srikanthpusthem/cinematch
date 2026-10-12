@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { TmdbError } from "../tmdb/client";
 import {
   createFakeSource,
@@ -74,6 +74,108 @@ describe("discoverCandidates", () => {
     });
     // 3 and 5 tie on votes; lower tmdb id first.
     expect(candidates.map((c) => c.tmdbId)).toEqual([2, 3, 5]);
+  });
+});
+
+describe("bounded discovery", () => {
+  const settings = { target: 100, minVotes: 0, fromYear: 2025, toYear: 2026 };
+
+  it.each(["movie", "series"] as const)(
+    "caps %s pages in every partition without fetching the next page",
+    async (kind) => {
+      const { source } = createFakeSource({});
+      let yielded = 0;
+      const discover = vi.fn(async function* (
+        ...args: Parameters<typeof source.discoverMovies>
+      ) {
+        expect(args[1]).toEqual({ maxPages: 1 });
+        for (let page = 1; page <= 3; page++) {
+          yielded++;
+          yield {
+            page,
+            totalPages: 3,
+            totalResults: 3,
+            results: [
+              {
+                id: yielded,
+                title: "Fixture",
+                name: "Fixture",
+                releaseDate: null,
+                firstAirDate: null,
+                genreIds: [],
+                popularity: 0,
+                voteCount: 10,
+              },
+            ],
+          };
+        }
+      });
+      source.discoverMovies = discover;
+      source.discoverSeries = discover;
+      const rows = await discoverCandidates(source, {
+        ...settings,
+        kind,
+        maxPagesPerPartition: 1,
+      });
+      expect(yielded).toBe(3); // two years plus the older partition
+      expect(rows.map((row) => row.tmdbId)).toEqual([1, 2, 3]);
+      expect(discover).toHaveBeenCalledTimes(3);
+      for (const call of discover.mock.calls)
+        expect(call[1]).toEqual({ maxPages: 1 });
+    },
+  );
+
+  it.each([0, -1, 1.5, 501, Infinity, NaN])(
+    "rejects invalid page budget %s before source calls",
+    async (maxPagesPerPartition) => {
+      const { source, calls } = createFakeSource({});
+      await expect(
+        discoverCandidates(source, {
+          ...settings,
+          kind: "movie",
+          maxPagesPerPartition,
+        }),
+      ).rejects.toThrow(/integer from 1 to 500/);
+      expect(calls.discover).toEqual([]);
+    },
+  );
+
+  it("keeps all pages by default and only changes the bounded sample when requested", async () => {
+    const { source } = createFakeSource({
+      movies: [1, 2, 3, 4].map((id) =>
+        fakeMovie(id, { releaseDate: "2026-01-01" }),
+      ),
+      pageSize: 1,
+    });
+    const all = await discoverCandidates(source, {
+      ...settings,
+      kind: "movie",
+    });
+    const bounded = await discoverCandidates(source, {
+      ...settings,
+      kind: "movie",
+      maxPagesPerPartition: 1,
+    });
+    expect(all.map((row) => row.tmdbId)).toEqual([1, 2, 3, 4]);
+    expect(bounded.map((row) => row.tmdbId)).toEqual([1]);
+  });
+
+  it("stops immediately when discovery fails, without querying later partitions", async () => {
+    const { source } = createFakeSource({});
+    let calls = 0;
+    source.discoverMovies = async function* () {
+      calls++;
+      yield { page: 1, totalPages: 2, totalResults: 0, results: [] };
+      throw new TmdbError("unauthorized", "/discover/movie", 1, 401);
+    };
+    await expect(
+      discoverCandidates(source, {
+        ...settings,
+        kind: "movie",
+        maxPagesPerPartition: 2,
+      }),
+    ).rejects.toMatchObject({ code: "unauthorized" });
+    expect(calls).toBe(1);
   });
 });
 
@@ -204,6 +306,23 @@ describe("ingestCatalog", () => {
       inserted: 2,
     });
     expect(report.catalog).toMatchObject({ movies: 4, series: 2 });
+  });
+
+  it("propagates the optional discovery budget to both kinds and preserves fresh resume behavior", async () => {
+    const { source, calls } = createFakeSource({
+      movies: [1, 2, 3, 4].map((id) => fakeMovie(id)),
+      series: [1, 2, 3].map((id) => fakeSeries(id)),
+      pageSize: 1,
+    });
+    const { store } = memoryStore();
+    const bounded = options({ maxPagesPerPartition: 1 });
+    const first = await ingestCatalog(source, store, bounded);
+    expect(first.catalog).toMatchObject({ movies: 1, series: 1 });
+    calls.details.length = 0;
+    const again = await ingestCatalog(source, store, bounded);
+    expect(again.movies.skippedFresh).toBe(1);
+    expect(again.series.skippedFresh).toBe(1);
+    expect(calls.details).toEqual([]);
   });
 
   it("resumes: a re-run skips titles fetched within maxAgeDays", async () => {

@@ -61,7 +61,39 @@ so `unknown` statuses can be traced. `tmdbId`, `originalTitle` and
 
 ## Integration
 
-This module is standalone for now: #69 was scoped not to change #4's migrations or
-#6's ingestion. The follow-up is for ingestion's row mapping (`src/catalog/store.ts`
-in #65) to build rows from these records, so there's one interpretation of TMDB
-fields.
+Movie and series detail responses now pass through `src/catalog/source-normalization.ts`
+at the raw TMDB client boundary, before lossy field parsing. The adapter preserves
+`CatalogSource` compatibility while passing canonical text, dates, image paths,
+runtime and seasons into the existing store. Series status uses the canonical enum
+in the existing text column. The full normalized record (including backdrop,
+provenance and notes) stays available internally as optional `normalization`
+metadata; columns that do not exist are not invented or migrated. Search and
+options expose only their explicit public field whitelists. Season-detail endpoint
+normalization remains separate from this movie/series ingestion boundary.
+
+Missing/null/non-array season lists produce an unknown (`null`) season count;
+an explicitly empty list means zero. Legacy fixture adapters without a count
+retain their existing derived-season behavior.
+
+Adult records, missing titles, oversized titles and explicitly unreleased statuses
+are skipped before any save. Movies skip rumored, planned, in-production,
+post-production and canceled statuses. Series skip planned, in-production and
+pilot; canceled series can still be watchable and remain eligible for later
+availability/runtime filters. Unknown status is retained with provenance/notes;
+it does not establish release or current availability. Invalid response envelopes
+or IDs remain malformed-source errors, distinct from record skips and transport
+outages.
+
+Ingestion reports exact per-reason skipped counts and at most 50 deterministic
+TMDB-ID/reason samples per kind. Skips are neither inserted/updated rows nor
+failure-budget errors; reported catalog counts remain actual stored counts.
+
+### Existing-row limitation
+
+A skip rejects the incoming detail; it does not delete or quarantine a previously
+stored row. If an existing title becomes adult or otherwise ineligible upstream,
+its prior lifecycle status is unchanged. Operators must review skipped-ID samples
+and hide affected existing rows through a separately reviewed lifecycle action
+before refreshing an already populated catalog for release. Do not treat a skipped
+refresh as proof that the old row is safe. The initial private database was empty;
+no automatic lifecycle reinterpretation or destructive repair is added here.

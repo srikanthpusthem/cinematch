@@ -1,19 +1,21 @@
 import {
-  AVOIDABLE_GENRES,
   EMPTY_ANSWERS,
   FORMATS,
   MOODS,
   MOVIE_LENGTHS,
   SERIES_LENGTHS,
-  SERVICE_OPTIONS,
   type GuestAnswers,
 } from "@/lib/guest-flow/types";
 
 /** Schema version stored with every snapshot. Bump when the shape changes. */
-export const GUEST_PERSISTENCE_SCHEMA_VERSION = 1 as const;
+export const GUEST_PERSISTENCE_SCHEMA_VERSION = 2 as const;
 
 /** Single localStorage key; version lives inside the JSON payload. */
 export const GUEST_PERSISTENCE_STORAGE_KEY = "cinematch.guest-persistence";
+
+/** Exact pre-migration payload, retained so legacy choices remain recoverable. */
+export const GUEST_PERSISTENCE_V1_BACKUP_STORAGE_KEY =
+  "cinematch.guest-persistence.v1-backup";
 
 /**
  * Result-feedback kinds persisted for guests.
@@ -81,14 +83,12 @@ export function emptySnapshot(): GuestPersistedSnapshot {
   };
 }
 
-const SERVICE_IDS = new Set<string>(SERVICE_OPTIONS.map((item) => item.id));
 const MOOD_IDS = new Set<string>(MOODS.map((item) => item.id));
 const FORMAT_IDS = new Set<string>(FORMATS.map((item) => item.id));
 const MOVIE_LENGTH_IDS = new Set<string>(MOVIE_LENGTHS.map((item) => item.id));
 const SERIES_LENGTH_IDS = new Set<string>(
   SERIES_LENGTHS.map((item) => item.id),
 );
-const AVOID_IDS = new Set<string>(AVOIDABLE_GENRES);
 const FEEDBACK_KINDS = new Set<string>(["watched", "like", "dislike", "skip"]);
 
 function isNonEmptyString(value: unknown): value is string {
@@ -105,20 +105,27 @@ function isBoolean(value: unknown): value is boolean {
   return typeof value === "boolean";
 }
 
-/** Validates a GuestAnswers object; returns null when any field is invalid. */
-export function parseGuestAnswers(value: unknown): GuestAnswers | null {
+/** Catalog IDs are canonical positive, safely representable decimal strings. */
+export function isLiveCatalogId(value: string): boolean {
+  return /^[1-9]\d*$/.test(value) && Number.isSafeInteger(Number(value));
+}
+
+function parseAnswers(
+  value: unknown,
+  validSelection: (value: string) => boolean,
+): GuestAnswers | null {
   if (value == null || typeof value !== "object") return null;
   const raw = value as Record<string, unknown>;
 
   if (!isStringArray(raw.serviceIds)) return null;
-  if (!raw.serviceIds.every((id) => SERVICE_IDS.has(id))) return null;
+  if (!raw.serviceIds.every(validSelection)) return null;
   if (!isBoolean(raw.servicesSkipped)) return null;
 
   if (!isStringArray(raw.seedIds)) return null;
-  if (!raw.seedIds.every((id) => isNonEmptyString(id))) return null;
+  if (!raw.seedIds.every(validSelection)) return null;
 
   if (!isStringArray(raw.avoidedGenres)) return null;
-  if (!raw.avoidedGenres.every((id) => AVOID_IDS.has(id))) return null;
+  if (!raw.avoidedGenres.every(validSelection)) return null;
 
   if (!isBoolean(raw.tasteSkipped)) return null;
 
@@ -148,6 +155,16 @@ export function parseGuestAnswers(value: unknown): GuestAnswers | null {
     movieLength: raw.movieLength as GuestAnswers["movieLength"],
     seriesLength: raw.seriesLength as GuestAnswers["seriesLength"],
   };
+}
+
+/** Validates v2 answers. New snapshots may contain only live catalog IDs. */
+export function parseGuestAnswers(value: unknown): GuestAnswers | null {
+  return parseAnswers(value, isLiveCatalogId);
+}
+
+/** Read legacy selections without guessing how labels map to live IDs. */
+export function parseLegacyGuestAnswers(value: unknown): GuestAnswers | null {
+  return parseAnswers(value, isNonEmptyString);
 }
 
 export function parseFeedbackEvent(value: unknown): GuestFeedbackEvent | null {

@@ -1,6 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { applyHardFilters, type RecommendationCandidate } from "./hard-filters";
+import {
+  applyHardFilters,
+  type LengthConstraint,
+  type RecommendationCandidate,
+} from "./hard-filters";
 
 function movie(
   id: string,
@@ -128,6 +132,115 @@ describe("applyHardFilters", () => {
       activeEditableConstraints: ["genres"],
       relaxationOptions: [{ constraint: "genres", additionalEligibleCount: 1 }],
     });
+  });
+
+  it.each([
+    {
+      length: { format: "movie", category: "under-100" } as LengthConstraint,
+      matching: movie("matching"),
+      wrongLength: movie("wrong-length", { runtimeMinutes: 150 }),
+      unknownLength: movie("unknown-length", { runtimeMinutes: null }),
+      otherFormat: series("other-format"),
+    },
+    {
+      length: { format: "series", category: "one-season" } as LengthConstraint,
+      matching: series("matching"),
+      wrongLength: series("wrong-length", { seasonCount: 4 }),
+      unknownLength: series("unknown-length", { seasonCount: null }),
+      otherFormat: movie("other-format"),
+    },
+  ])(
+    "counts format relaxation with its dependent $length.format length cleared",
+    ({ length, matching, wrongLength, unknownLength, otherFormat }) => {
+      const candidates = [
+        { ...matching, id: "first" },
+        otherFormat,
+        { ...otherFormat, id: "watched" },
+        { ...otherFormat, id: "wrong-service", usStreamingServiceIds: [9] },
+        { ...otherFormat, id: "excluded-genre", genreIds: [27] },
+        wrongLength,
+        unknownLength,
+        { ...matching, id: "second" },
+      ];
+      const result = applyHardFilters(candidates, {
+        selectedUsServiceIds: [8],
+        excludedGenreIds: [27],
+        watchedIds: ["watched"],
+        format: length.format,
+        length,
+        limit: 5,
+      });
+
+      // Suggestions never change the returned candidates or their order.
+      expect(result.candidates.map(({ id }) => id)).toEqual([
+        "first",
+        "second",
+      ]);
+      expect(result.exhaustion.relaxationOptions).toEqual([
+        { constraint: "services", additionalEligibleCount: 0 },
+        { constraint: "genres", additionalEligibleCount: 0 },
+        { constraint: "format", additionalEligibleCount: 3 },
+        { constraint: "length", additionalEligibleCount: 2 },
+      ]);
+    },
+  );
+
+  it("counts format-only relaxation without admitting watched candidates", () => {
+    const result = applyHardFilters(
+      [movie("selected"), series("other"), series("watched")],
+      { format: "movie", watchedIds: ["watched"], limit: 5 },
+    );
+
+    expect(result.candidates.map(({ id }) => id)).toEqual(["selected"]);
+    expect(result.exhaustion.relaxationOptions).toEqual([
+      { constraint: "format", additionalEligibleCount: 1 },
+    ]);
+  });
+
+  it("indexes membership inputs once per operation across every relaxation pass", () => {
+    const watchedIds = ["watched"];
+    const selectedUsServiceIds = [8, 8];
+    const excludedGenreIds = [27, 27];
+    const watchedIterations = vi.spyOn(watchedIds, Symbol.iterator);
+    const serviceIterations = vi.spyOn(selectedUsServiceIds, Symbol.iterator);
+    const genreIterations = vi.spyOn(excludedGenreIds, Symbol.iterator);
+    const candidates = [
+      ...Array.from({ length: 64 }, (_, index) => movie(`movie-${index}`)),
+      movie("watched"),
+      movie("excluded", { genreIds: [27] }),
+      movie("wrong-service", { usStreamingServiceIds: [9] }),
+      movie("wrong-length", { runtimeMinutes: 150 }),
+      series("other-format"),
+    ];
+    const input = {
+      watchedIds,
+      selectedUsServiceIds,
+      excludedGenreIds,
+      format: "movie" as const,
+      length: { format: "movie", category: "under-100" } as const,
+      limit: 70,
+    };
+
+    const result = applyHardFilters(candidates, input);
+    expect(result.candidates).toHaveLength(64);
+    expect(result.exhaustion.relaxationOptions).toHaveLength(4);
+    expect(watchedIterations).toHaveBeenCalledTimes(1);
+    expect(serviceIterations).toHaveBeenCalledTimes(1);
+    expect(genreIterations).toHaveBeenCalledTimes(1);
+
+    // Rebuild once on the next operation so edits to preferences are respected.
+    watchedIds.push("movie-0");
+    selectedUsServiceIds.push(9);
+    excludedGenreIds.length = 0;
+    const updated = applyHardFilters(candidates, input);
+    expect(updated.candidates.map(({ id }) => id)).toEqual([
+      ...Array.from({ length: 63 }, (_, index) => `movie-${index + 1}`),
+      "excluded",
+      "wrong-service",
+    ]);
+    expect(watchedIterations).toHaveBeenCalledTimes(2);
+    expect(serviceIterations).toHaveBeenCalledTimes(2);
+    expect(genreIterations).toHaveBeenCalledTimes(2);
   });
 
   it("supports cold start with no optional constraints", () => {

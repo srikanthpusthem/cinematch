@@ -1,12 +1,14 @@
 // Server-only TMDB v3 client for catalog ingestion. Callers depend on the
 // CatalogSource interface so the provider stays swappable.
 import {
+  normalizeMovieDetails,
+  normalizeSeriesDetails,
+} from "../catalog/source-normalization";
+import {
   MalformedResponseError,
-  parseMovieDetails,
   parseMovieSummary,
   parsePage,
   parseSeasonDetails,
-  parseSeriesDetails,
   parseSeriesSummary,
   parseWatchProviders,
   type MovieDetails,
@@ -290,10 +292,14 @@ export function createTmdbClient(options: TmdbClientOptions): CatalogSource {
       get(
         `/movie/${id}`,
         { append_to_response: "keywords" },
-        parseMovieDetails,
+        normalizeMovieDetails,
       ),
     getSeries: (id) =>
-      get(`/tv/${id}`, { append_to_response: "keywords" }, parseSeriesDetails),
+      get(
+        `/tv/${id}`,
+        { append_to_response: "keywords" },
+        normalizeSeriesDetails,
+      ),
     getSeason: (seriesId, seasonNumber) =>
       get(`/tv/${seriesId}/season/${seasonNumber}`, {}, parseSeasonDetails),
     getMovieWatchProviders: (id) =>

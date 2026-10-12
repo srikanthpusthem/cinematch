@@ -1,4 +1,7 @@
+import { mockCatalog } from "./catalog-fixture";
 import { expect, test, type Page } from "@playwright/test";
+
+test.beforeEach(async ({ page }) => mockCatalog(page));
 
 async function assertNoHorizontalOverflow(page: Page) {
   const layout = await page.evaluate(() => ({
@@ -75,6 +78,7 @@ test.describe("Services step", () => {
       ).toBeVisible();
 
       const netflixLabel = page.locator("label").filter({ hasText: "Netflix" });
+      await expect(netflixLabel).toBeVisible();
       const box = await netflixLabel.boundingBox();
       expect(box).not.toBeNull();
       expect(box!.height).toBeGreaterThanOrEqual(44);

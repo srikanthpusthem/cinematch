@@ -15,6 +15,8 @@ import {
 import {
   emptySnapshot,
   GUEST_PERSISTENCE_STORAGE_KEY,
+  GUEST_PERSISTENCE_V1_BACKUP_STORAGE_KEY,
+  parseFeedbackEvent,
   type DerivedFeedbackState,
   type GuestFeedbackEvent,
   type GuestFeedbackKind,
@@ -28,6 +30,10 @@ export type GuestPersistenceResult = {
   status: StorageStatus;
   /** True when corrupt / unknown-version data was discarded. */
   reset: boolean;
+  /** True when a v1 snapshot was converted to live-catalog selections. */
+  migrated: boolean;
+  /** Display after loading; a failed write still returns usable session state. */
+  migrationNotice: string | null;
 };
 
 export type AppendFeedbackResult = GuestPersistenceResult & {
@@ -54,9 +60,58 @@ function persistSnapshot(
   snapshot: GuestPersistedSnapshot,
   storage: KeyValueStorage | null,
 ): StorageStatus {
+  // Guard every writer, not only load: a failed migration backup must not be
+  // bypassed by a later save, feedback action, undo, or clear.
+  const existing = readStorageValue(storage, GUEST_PERSISTENCE_STORAGE_KEY);
+  if (!existing.status.ok) return existing.status;
+  if (existing.value !== null) {
+    let raw: unknown;
+    try {
+      raw = JSON.parse(existing.value);
+    } catch {
+      raw = null;
+    }
+    if (
+      raw !== null &&
+      typeof raw === "object" &&
+      "version" in raw &&
+      raw.version === 1
+    ) {
+      const backupStatus = backupLegacySnapshot(storage, existing.value);
+      if (!backupStatus.ok) return backupStatus;
+    }
+  }
   const payload = JSON.stringify(snapshot);
   return writeStorageValue(storage, GUEST_PERSISTENCE_STORAGE_KEY, payload)
     .status;
+}
+
+function backupLegacySnapshot(
+  storage: KeyValueStorage | null,
+  raw: string,
+): StorageStatus {
+  const backup = readStorageValue(
+    storage,
+    GUEST_PERSISTENCE_V1_BACKUP_STORAGE_KEY,
+  );
+  if (!backup.status.ok) return backup.status;
+  if (backup.value === raw) return { ok: true };
+  // Preserve any earlier backup rather than silently replacing recoverable data.
+  if (backup.value !== null) return { ok: false, reason: "write_failed" };
+  const written = writeStorageValue(
+    storage,
+    GUEST_PERSISTENCE_V1_BACKUP_STORAGE_KEY,
+    raw,
+  );
+  if (!written.status.ok) return written.status;
+  const verified = readStorageValue(
+    storage,
+    GUEST_PERSISTENCE_V1_BACKUP_STORAGE_KEY,
+  );
+  if (!verified.status.ok) return verified.status;
+  return verified.value === raw
+    ? { ok: true }
+    : { ok: false, reason: "write_failed" };
 }
 
 /**
@@ -74,6 +129,8 @@ export function loadGuestPersistence(
       snapshot: emptySnapshot(),
       status: read.status,
       reset: false,
+      migrated: false,
+      migrationNotice: null,
     };
   }
 
@@ -82,6 +139,8 @@ export function loadGuestPersistence(
       snapshot: emptySnapshot(),
       status: { ok: true },
       reset: false,
+      migrated: false,
+      migrationNotice: null,
     };
   }
 
@@ -94,6 +153,8 @@ export function loadGuestPersistence(
       snapshot: emptySnapshot(),
       status: { ok: false, reason: "corrupt" },
       reset: true,
+      migrated: false,
+      migrationNotice: null,
     };
   }
 
@@ -106,13 +167,45 @@ export function loadGuestPersistence(
         ? { ok: false, reason: migrated.reason ?? "corrupt" }
         : writeStatus,
       reset: true,
+      migrated: false,
+      migrationNotice: null,
     };
   }
 
   return {
     snapshot: migrated.snapshot,
-    status: { ok: true },
+    status: migrated.migrated
+      ? persistSnapshot(migrated.snapshot, backend)
+      : { ok: true },
     reset: false,
+    migrated: migrated.migrated,
+    migrationNotice: migrated.migrationNotice,
+  };
+}
+
+/**
+ * Persist a complete session snapshot, including any in-memory-only events.
+ * Callers can keep the returned snapshot after a failed write and retry later;
+ * this deliberately does not reload or merge stale storage into session state.
+ */
+export function saveGuestSnapshot(
+  snapshot: GuestPersistedSnapshot,
+  storage?: KeyValueStorage | null,
+): GuestPersistenceResult {
+  const backend = resolveStorage(storage);
+  const validated = parseSnapshot(snapshot);
+  if (!validated.ok) {
+    return {
+      ...loadGuestPersistence(backend),
+      status: { ok: false, reason: "corrupt" },
+    };
+  }
+  return {
+    snapshot: validated.snapshot,
+    status: persistSnapshot(validated.snapshot, backend),
+    reset: false,
+    migrated: validated.migrated,
+    migrationNotice: validated.migrationNotice,
   };
 }
 
@@ -133,13 +226,21 @@ export function saveGuestAnswers(
     return {
       snapshot: current.snapshot,
       status: { ok: false, reason: "corrupt" },
-      reset: false,
+      reset: current.reset,
+      migrated: current.migrated,
+      migrationNotice: current.migrationNotice,
     };
   }
 
   const snapshot = validated.snapshot;
   const status = persistSnapshot(snapshot, backend);
-  return { snapshot, status, reset: false };
+  return {
+    snapshot,
+    status,
+    reset: current.reset,
+    migrated: current.migrated,
+    migrationNotice: current.migrationNotice,
+  };
 }
 
 /** Append a feedback event with first-write-wins idempotency. */
@@ -149,7 +250,16 @@ export function appendFeedbackEvent(
 ): AppendFeedbackResult {
   const backend = resolveStorage(storage);
   const current = loadGuestPersistence(backend);
-  const next = appendEvent(current.snapshot, event);
+  const validated = parseFeedbackEvent(event);
+  if (validated === null) {
+    return {
+      ...current,
+      status: { ok: false, reason: "corrupt" },
+      applied: false,
+      derived: deriveFeedbackState(current.snapshot),
+    };
+  }
+  const next = appendEvent(current.snapshot, validated);
   const status = next.applied
     ? persistSnapshot(next.snapshot, backend)
     : current.status.ok
@@ -157,8 +267,10 @@ export function appendFeedbackEvent(
       : persistSnapshot(next.snapshot, backend);
   return {
     snapshot: next.snapshot,
-    status: next.applied ? status : { ok: true },
+    status,
     reset: current.reset,
+    migrated: current.migrated,
+    migrationNotice: current.migrationNotice,
     applied: next.applied,
     derived: deriveFeedbackState(next.snapshot),
   };
@@ -189,11 +301,13 @@ export function undoLatestFeedback(
   const next = undoLatestEvent(current.snapshot, undoEventId);
   const status = next.applied
     ? persistSnapshot(next.snapshot, backend)
-    : { ok: true as const };
+    : current.status;
   return {
     snapshot: next.snapshot,
     status,
     reset: current.reset,
+    migrated: current.migrated,
+    migrationNotice: current.migrationNotice,
     applied: next.applied,
     undoneEventId: next.undoneEventId,
     derived: deriveFeedbackState(next.snapshot),
@@ -207,5 +321,11 @@ export function clearGuestPersistence(
   const backend = resolveStorage(storage);
   const snapshot = emptySnapshot();
   const status = persistSnapshot(snapshot, backend);
-  return { snapshot, status, reset: false };
+  return {
+    snapshot,
+    status,
+    reset: false,
+    migrated: false,
+    migrationNotice: null,
+  };
 }

@@ -17,7 +17,8 @@ export const SERVICE_OPTIONS = [
   { id: "paramount", name: "Paramount+" },
 ] as const;
 
-export type ServiceId = (typeof SERVICE_OPTIONS)[number]["id"];
+/** Catalog provider ID as a decimal string in the live flow. */
+export type ServiceId = string;
 
 export const MOODS = [
   { id: "laugh", label: "Laugh" },
@@ -82,7 +83,8 @@ export const AVOIDABLE_GENRES = [
   "Documentary",
 ] as const;
 
-export type AvoidableGenre = (typeof AVOIDABLE_GENRES)[number];
+/** Catalog genre ID as a decimal string in the live flow. */
+export type AvoidableGenre = string;
 
 export const FLOW_STEPS = [
   { id: "services", label: "Services" },
@@ -93,7 +95,25 @@ export const FLOW_STEPS = [
 
 export type FlowStep = (typeof FLOW_STEPS)[number]["id"];
 
-export type Access = "subscription" | "rent" | "buy";
+export type Access = "subscription" | "free" | "ads" | "rent" | "buy";
+
+/** Fixed mock "now" for freshness comparisons in fixtures and UI. */
+export const MOCK_NOW = "2026-09-28T18:00:00.000Z";
+
+/** Availability older than this (relative to MOCK_NOW) is treated as stale. */
+export const FRESHNESS_STALE_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function isFreshnessStale(
+  checkedAt: string,
+  nowIso: string = MOCK_NOW,
+): boolean {
+  const checked = Date.parse(checkedAt);
+  const now = Date.parse(nowIso);
+  if (Number.isNaN(checked) || Number.isNaN(now)) return true;
+  return now - checked > FRESHNESS_STALE_MS;
+}
+
+export type PickFeedbackAction = "watched" | "like" | "not-for-me";
 
 export type GuestAnswers = {
   serviceIds: ServiceId[];
@@ -133,17 +153,30 @@ export type ServiceOffer = {
   serviceId: ServiceId;
   serviceName: string;
   access: Access;
+  /** ISO timestamp when this offer's availability was last checked. */
+  freshnessCheckedAt: string | null;
+  /**
+   * Verified HTTPS playback deep-link from fixtures only.
+   * Never invent in the UI; omit when no verified link exists.
+   */
+  verifiedWatchUrl?: string;
 };
 
 export type Recommendation = {
   role: "recommendation";
   id: string;
   title: string;
-  year: number;
+  year: number | null;
   format: WatchFormat;
   timeLabel: string;
   reason: string;
+  posterUrl?: string | null;
   offers: ServiceOffer[];
+  availability?: {
+    state: "current" | "stale" | "unknown";
+    checkedAt: string | null;
+    infoUrl: string | null;
+  };
 };
 
 export type RecommendConfidence = "cold-start" | "seeded";
@@ -162,10 +195,24 @@ export type RecommendResult =
       best: Recommendation;
       alternatives: Recommendation[];
     }
+  | {
+      status: "unavailable";
+      confidence: RecommendConfidence;
+      message: string;
+      best: Recommendation;
+      alternatives: Recommendation[];
+    }
   | { status: "empty"; message: string }
   | { status: "error"; message: string };
 
-export type MockMode = "success" | "empty" | "shortage" | "error" | "loading";
+export type MockMode =
+  | "success"
+  | "empty"
+  | "shortage"
+  | "error"
+  | "loading"
+  | "stale"
+  | "unavailable";
 
 export function movieLengthMatches(
   minutes: number,

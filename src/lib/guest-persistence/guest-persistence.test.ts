@@ -26,9 +26,9 @@ import {
 
 const sampleAnswers: GuestAnswers = {
   ...EMPTY_ANSWERS,
-  serviceIds: ["netflix", "max"],
-  seedIds: ["seed-a", "seed-b", "seed-c"],
-  avoidedGenres: ["Horror"],
+  serviceIds: ["8", "1899"],
+  seedIds: ["101", "102", "103"],
+  avoidedGenres: ["27"],
   mood: "laugh",
   format: "movie",
   movieLength: "any",
@@ -67,7 +67,7 @@ describe("mapPickFeedbackAction", () => {
 });
 
 describe("parseSnapshot / migrateOrReset", () => {
-  it("accepts a valid v1 snapshot", () => {
+  it("accepts a valid current-version snapshot", () => {
     const raw = {
       version: GUEST_PERSISTENCE_SCHEMA_VERSION,
       answers: sampleAnswers,
@@ -79,7 +79,7 @@ describe("parseSnapshot / migrateOrReset", () => {
     const parsed = parseSnapshot(raw);
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
-    expect(parsed.snapshot.answers.serviceIds).toEqual(["netflix", "max"]);
+    expect(parsed.snapshot.answers.serviceIds).toEqual(["8", "1899"]);
     expect(parsed.snapshot.events).toHaveLength(2);
   });
 
@@ -88,7 +88,7 @@ describe("parseSnapshot / migrateOrReset", () => {
     expect(parseSnapshot({ version: 1 }).ok).toBe(false);
     expect(
       parseSnapshot({
-        version: 1,
+        version: GUEST_PERSISTENCE_SCHEMA_VERSION,
         answers: { ...sampleAnswers, mood: "excited" },
         events: [],
       }).ok,
@@ -114,7 +114,7 @@ describe("parseSnapshot / migrateOrReset", () => {
   it("rejects events that carry vectors, prompts, or credentials", () => {
     expect(
       parseSnapshot({
-        version: 1,
+        version: GUEST_PERSISTENCE_SCHEMA_VERSION,
         answers: sampleAnswers,
         events: [
           {
@@ -129,7 +129,7 @@ describe("parseSnapshot / migrateOrReset", () => {
 
     expect(
       parseSnapshot({
-        version: 1,
+        version: GUEST_PERSISTENCE_SCHEMA_VERSION,
         answers: sampleAnswers,
         events: [],
         token: "secret",
