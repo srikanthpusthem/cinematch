@@ -8,6 +8,7 @@
 export {
   GUEST_PERSISTENCE_SCHEMA_VERSION,
   GUEST_PERSISTENCE_STORAGE_KEY,
+  GUEST_PERSISTENCE_V1_BACKUP_STORAGE_KEY,
   emptySnapshot,
   parseGuestAnswers,
   parseFeedbackEvent,
@@ -41,6 +42,7 @@ export {
 
 export {
   loadGuestPersistence,
+  saveGuestSnapshot,
   saveGuestAnswers,
   appendFeedbackEvent,
   recordFeedback,

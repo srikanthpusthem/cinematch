@@ -1,13 +1,10 @@
 "use client";
 
-import {
-  SERVICE_OPTIONS,
-  type GuestAnswers,
-  type ServiceId,
-} from "@/lib/guest-flow/types";
+import { type GuestAnswers, type ServiceId } from "@/lib/guest-flow/types";
 
 export type ServicesStepProps = {
   answers: GuestAnswers;
+  services: readonly { id: string; name: string }[];
   onToggle: (id: ServiceId) => void;
   onSkip: () => void;
   onContinue: () => void;
@@ -24,6 +21,7 @@ export function isServiceSelected(
 
 export function ServicesStep({
   answers,
+  services,
   onToggle,
   onSkip,
   onContinue,
@@ -45,7 +43,7 @@ export function ServicesStep({
       <fieldset className="mt-4 min-w-0">
         <legend className="sr-only">US streaming subscriptions</legend>
         <ul className="grid grid-cols-2 gap-3">
-          {SERVICE_OPTIONS.map((service) => {
+          {services.map((service) => {
             const selected = isServiceSelected(answers, service.id);
             const stateId = `service-${service.id}-state`;
             return (

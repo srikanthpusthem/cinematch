@@ -110,8 +110,12 @@ export function seriesRows(d: SeriesDetails, fetchedAt: Date) {
         episodeRuntime != null && episodeRuntime <= MAX_MINUTES
           ? episodeRuntime
           : null,
-      // Regular seasons only; season 0 is Specials.
-      seasonCount: seasonList.filter((s) => s.seasonNumber > 0).length,
+      // Canonical source distinguishes an unknown list from a known empty list.
+      // Legacy fixture/source adapters still derive regular seasons (no Specials).
+      seasonCount:
+        d.seasonCount === undefined
+          ? seasonList.filter((s) => s.seasonNumber > 0).length
+          : d.seasonCount,
     },
     seasons: seasonList.map((s) => ({
       seasonNumber: s.seasonNumber,

@@ -11,6 +11,7 @@ function renderStep(answers: GuestAnswers = EMPTY_ANSWERS) {
   return renderToStaticMarkup(
     <ServicesStep
       answers={answers}
+      services={SERVICE_OPTIONS}
       onToggle={() => undefined}
       onSkip={() => undefined}
       onContinue={() => undefined}
@@ -107,6 +108,7 @@ describe("ServicesStep", () => {
       renderToStaticMarkup(
         <ServicesStep
           answers={EMPTY_ANSWERS}
+          services={SERVICE_OPTIONS}
           onToggle={onToggle}
           onSkip={onSkip}
           onContinue={onContinue}

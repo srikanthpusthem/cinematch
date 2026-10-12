@@ -126,8 +126,8 @@ export interface NormalizedSeries extends NormalizedTitle {
   status: SeriesStatus;
   lastAirDate: string | null;
   episodeRuntimeMinutes: number | null;
-  /** Regular seasons (excludes season 0, Specials). */
-  seasonCount: number;
+  /** Regular seasons (excludes Specials); null when the source list is unknown. */
+  seasonCount: number | null;
   seasons: NormalizedSeason[];
 }
 
@@ -625,7 +625,9 @@ export function normalizeSeries(raw: unknown): Normalized<NormalizedSeries> {
         "last_air_date_invalid",
       ),
       episodeRuntimeMinutes,
-      seasonCount: kept.filter((x) => !x.isSpecials).length,
+      seasonCount: Array.isArray(raw.seasons)
+        ? kept.filter((x) => !x.isSpecials).length
+        : null,
       seasons: kept,
       provenance: { source: "tmdb", sourceStatus: s.source },
       notes: sortedNotes(notes),

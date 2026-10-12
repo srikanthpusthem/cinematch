@@ -1,8 +1,13 @@
 // Resumable, idempotent catalog backfill: discover candidates, skip titles
 // fetched recently, fetch details for the rest and save each in its own
 // transaction. Per-title failures are counted; systemic failures abort.
-import { TmdbError, type CatalogSource } from "../tmdb/client";
+import type { CatalogSource } from "../tmdb/client";
 import { discoverCandidates, type Candidate } from "./discover";
+import { emptyTally, runPool, totalFailed, type Tally } from "./run";
+import {
+  SourceRecordSkippedError,
+  type SourceSkipReason,
+} from "./source-normalization";
 import type { CatalogStats, CatalogStore, TitleKind } from "./store";
 
 export interface IngestOptions {
@@ -22,17 +27,16 @@ export interface IngestOptions {
   log?: (message: string) => void;
 }
 
-export interface KindReport {
+export interface KindReport extends Tally {
   target: number;
   candidates: number;
   skippedFresh: number;
-  attempted: number;
+  /** Ineligible detail records are not successful writes or provider failures. */
+  skipped: Partial<Record<SourceSkipReason, number>>;
+  /** At most 50 IDs for operator review; counts above remain exhaustive. */
+  skippedSamples: { tmdbId: number; reason: SourceSkipReason }[];
   inserted: number;
   updated: number;
-  /** Titles TMDB no longer serves (404); skipped, not failures. */
-  notFound: number;
-  /** Failure counts by TmdbError code, or "db" for rejected writes. */
-  failed: Record<string, number>;
 }
 
 export interface IngestReport {
@@ -67,31 +71,17 @@ export class IngestAbortedError extends Error {
   }
 }
 
-/** Failures that mean every further request will fail too. */
-const FATAL_CODES = new Set(["unauthorized"]);
-
 function emptyKindReport(target: number): KindReport {
   return {
+    ...emptyTally(),
     target,
     candidates: 0,
     skippedFresh: 0,
-    attempted: 0,
+    skipped: {},
+    skippedSamples: [],
     inserted: 0,
     updated: 0,
-    notFound: 0,
-    failed: {},
   };
-}
-
-const totalFailed = (r: KindReport) =>
-  Object.values(r.failed).reduce((a, b) => a + b, 0);
-
-/** Postgres SQLSTATE of a rejected write, if any (never the message/values). */
-function pgCode(error: unknown): string | undefined {
-  const code = (error as { code?: unknown })?.code;
-  return typeof code === "string" && /^[0-9A-Z]{5}$/.test(code)
-    ? code
-    : undefined;
 }
 
 export async function ingestCatalog(
@@ -141,11 +131,16 @@ export async function ingestCatalog(
       `[${kind}] ${candidates.length} candidates, ${report.skippedFresh} fresh, ${todo.length} to fetch`,
     );
 
-    let next = 0;
-    const worker = async () => {
-      while (!abortReason && next < todo.length) {
-        const candidate = todo[next++]!;
-        report.attempted++;
+    abortReason = await runPool(
+      todo,
+      report,
+      {
+        label: kind,
+        concurrency: options.concurrency,
+        budget: options,
+        log,
+      },
+      async (candidate: Candidate) => {
         try {
           const result =
             kind === "movie"
@@ -159,44 +154,26 @@ export async function ingestCatalog(
                 );
           report[result]++;
         } catch (error) {
-          if (error instanceof TmdbError && error.code === "not_found") {
-            report.notFound++;
-          } else {
-            const code =
-              error instanceof TmdbError
-                ? error.code
-                : pgCode(error)
-                  ? "db"
-                  : "unexpected";
-            report.failed[code] = (report.failed[code] ?? 0) + 1;
-            if (FATAL_CODES.has(code)) {
-              abortReason = `TMDB rejected the API key (${code}); check TMDB_API_KEY`;
-            }
-          }
-          const failures = totalFailed(report);
-          if (
-            !abortReason &&
-            report.attempted >= options.minAttemptsBeforeAbort &&
-            failures / report.attempted > options.maxFailureRate
-          ) {
-            abortReason = `${kind} failure rate ${failures}/${report.attempted} exceeds ${options.maxFailureRate}`;
-          }
+          if (!(error instanceof SourceRecordSkippedError)) throw error;
+          report.skipped[error.reason] =
+            (report.skipped[error.reason] ?? 0) + 1;
+          report.skippedSamples.push({
+            tmdbId: candidate.tmdbId,
+            reason: error.reason,
+          });
+          report.skippedSamples.sort((a, b) => a.tmdbId - b.tmdbId);
+          if (report.skippedSamples.length > 50) report.skippedSamples.pop();
         }
-        if (report.attempted % 500 === 0) {
-          log(`[${kind}] ${report.attempted}/${todo.length} processed`);
-        }
-      }
-    };
-    await Promise.all(
-      Array.from({ length: Math.max(1, options.concurrency) }, worker),
+      },
     );
 
+    report.skippedSamples.sort((a, b) => a.tmdbId - b.tmdbId);
     if (abortReason) {
       const partial = await finish();
       throw new IngestAbortedError(abortReason, partial);
     }
     log(
-      `[${kind}] done: ${report.inserted} inserted, ${report.updated} updated, ${report.notFound} not found, ${totalFailed(report)} failed`,
+      `[${kind}] done: ${report.inserted} inserted, ${report.updated} updated, ${report.notFound} not found, skipped ${JSON.stringify(report.skipped)}, ${totalFailed(report)} failed`,
     );
   }
 

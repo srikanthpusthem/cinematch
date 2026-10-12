@@ -1,6 +1,7 @@
 // Minimal TMDB v3 response shapes used by catalog ingestion, with small
 // hand-written validators. Only fields the catalog needs are typed; unknown
 // fields are dropped. A validator throws MalformedResponseError on bad input.
+import type { NormalizedMovie, NormalizedSeries } from "../catalog/normalize";
 
 export class MalformedResponseError extends Error {
   constructor(where: string) {
@@ -81,6 +82,8 @@ export interface Page<T> {
 }
 
 export interface MovieDetails {
+  /** Internal canonical metadata; raw payloads are never retained. */
+  normalization?: NormalizedMovie;
   id: number;
   title: string;
   originalTitle: string | null;
@@ -100,7 +103,7 @@ export interface MovieDetails {
 
 export interface SeasonSummary {
   seasonNumber: number;
-  episodeCount: number;
+  episodeCount: number | null;
   airDate: string | null;
   name: string | null;
   overview: string | null;
@@ -108,6 +111,8 @@ export interface SeasonSummary {
 }
 
 export interface SeriesDetails {
+  /** Internal canonical metadata; raw payloads are never retained. */
+  normalization?: NormalizedSeries;
   id: number;
   name: string;
   originalName: string | null;
@@ -122,6 +127,8 @@ export interface SeriesDetails {
   voteCount: number | null;
   popularity: number | null;
   episodeRunTimes: number[];
+  /** Canonical count; omitted only by legacy fixture/source adapters. */
+  seasonCount?: number | null;
   seasons: SeasonSummary[];
   /** Present when requested with append_to_response=keywords; else []. */
   keywords: Keyword[];

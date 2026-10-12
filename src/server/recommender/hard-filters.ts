@@ -40,7 +40,11 @@ export type EditableConstraint = "services" | "genres" | "format" | "length";
 
 export interface RelaxationOption {
   constraint: EditableConstraint;
-  /** Eligible candidates gained if only this constraint is removed. */
+  /**
+   * Eligible candidates gained if this constraint is removed. Removing format
+   * also clears its format-specific length constraint, as required by validation.
+   * Removing length alone retains the selected format.
+   */
   additionalEligibleCount: number;
 }
 
@@ -62,6 +66,12 @@ export interface FilterExhaustion {
 export interface HardFilterResult<T extends RecommendationCandidate> {
   candidates: readonly T[];
   exhaustion: FilterExhaustion;
+}
+
+interface FilterMembership {
+  watchedIds: ReadonlySet<string>;
+  selectedUsServiceIds: ReadonlySet<number>;
+  excludedGenreIds: ReadonlySet<number>;
 }
 
 function activeEditableConstraints(
@@ -103,15 +113,16 @@ function matchesLength(
 function isEligible(
   candidate: RecommendationCandidate,
   input: HardFilterInput,
+  membership: FilterMembership,
   ignoredConstraint?: EditableConstraint,
 ): boolean {
-  if (new Set(input.watchedIds).has(candidate.id)) return false;
+  if (membership.watchedIds.has(candidate.id)) return false;
 
   if (
     ignoredConstraint !== "services" &&
-    input.selectedUsServiceIds?.length &&
+    membership.selectedUsServiceIds.size > 0 &&
     !candidate.usStreamingServiceIds.some((id) =>
-      input.selectedUsServiceIds?.includes(id),
+      membership.selectedUsServiceIds.has(id),
     )
   ) {
     return false;
@@ -119,8 +130,8 @@ function isEligible(
 
   if (
     ignoredConstraint !== "genres" &&
-    input.excludedGenreIds?.length &&
-    candidate.genreIds.some((id) => input.excludedGenreIds?.includes(id))
+    membership.excludedGenreIds.size > 0 &&
+    candidate.genreIds.some((id) => membership.excludedGenreIds.has(id))
   ) {
     return false;
   }
@@ -134,6 +145,7 @@ function isEligible(
   }
 
   return (
+    ignoredConstraint === "format" ||
     ignoredConstraint === "length" ||
     !input.length ||
     matchesLength(candidate, input.length)
@@ -156,8 +168,13 @@ export function applyHardFilters<T extends RecommendationCandidate>(
 ): HardFilterResult<T> {
   validateInput(input);
 
+  const membership: FilterMembership = {
+    watchedIds: new Set(input.watchedIds),
+    selectedUsServiceIds: new Set(input.selectedUsServiceIds),
+    excludedGenreIds: new Set(input.excludedGenreIds),
+  };
   const eligible = candidates.filter((candidate) =>
-    isEligible(candidate, input),
+    isEligible(candidate, input, membership),
   );
   const returned = eligible.slice(0, input.limit);
   const active = activeEditableConstraints(input);
@@ -171,7 +188,7 @@ export function applyHardFilters<T extends RecommendationCandidate>(
           additionalEligibleCount: Math.max(
             0,
             candidates.filter((candidate) =>
-              isEligible(candidate, input, constraint),
+              isEligible(candidate, input, membership, constraint),
             ).length - eligible.length,
           ),
         }));

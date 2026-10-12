@@ -119,8 +119,8 @@ describe("TMDB client: endpoints", () => {
       },
     ]);
     expect(series.keywords).toEqual([
-      { id: 15484, name: "chemistry" },
       { id: 1646, name: "drug dealer" },
+      { id: 15484, name: "chemistry" },
     ]);
     expect(series).toMatchObject({
       originalName: "Breaking Bad",
@@ -129,7 +129,8 @@ describe("TMDB client: endpoints", () => {
     expect(requests[0]?.url.searchParams.get("append_to_response")).toBe(
       "keywords",
     );
-    expect(series.episodeRunTimes).toEqual([45, 47]);
+    expect(series.episodeRunTimes).toEqual([45]);
+    expect(series.status).toBe("ended");
     expect(requests[1]?.url.pathname).toBe("/3/tv/1396/season/1");
     expect(season.episodes).toHaveLength(2);
     expect(season.episodes[1]).toMatchObject({
@@ -373,7 +374,7 @@ describe("TMDB client: timeouts", () => {
 });
 
 describe("TMDB client: malformed responses", () => {
-  it("treats missing keywords as empty but rejects a bad keywords shape", async () => {
+  it("treats missing keywords as empty and records malformed optional terms", async () => {
     const withoutKeywords = {
       ...(fixture("movie-550") as object),
       keywords: undefined,
@@ -388,8 +389,9 @@ describe("TMDB client: malformed responses", () => {
           keywords: { keywords: [{ id: 1 }] },
         }),
     ]);
-    const error = await caught(bad.client.getMovie(550));
-    expect(error.message).toContain("movie.keywords.keywords[0].name");
+    const normalized = await bad.client.getMovie(550);
+    expect(normalized.keywords).toEqual([]);
+    expect(normalized.normalization?.notes).toContain("keyword_dropped");
   });
 
   it("rejects invalid JSON without retrying", async () => {

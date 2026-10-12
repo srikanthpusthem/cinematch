@@ -1,4 +1,7 @@
+import { mockCatalog } from "./catalog-fixture";
 import { expect, test } from "@playwright/test";
+
+test.beforeEach(async ({ page }) => mockCatalog(page));
 
 test("home page loads and shows CineMatch", async ({ page }) => {
   await page.goto("/");

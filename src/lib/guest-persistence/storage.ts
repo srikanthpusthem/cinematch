@@ -27,10 +27,16 @@ export function getBrowserLocalStorage(): KeyValueStorage | null {
     if (typeof globalThis === "undefined") return null;
     const storage = (globalThis as { localStorage?: KeyValueStorage })
       .localStorage;
-    if (!storage || typeof storage.getItem !== "function") return null;
-    const probeKey = "__cinematch_guest_probe__";
-    storage.setItem(probeKey, "1");
-    storage.removeItem(probeKey);
+    if (
+      !storage ||
+      typeof storage.getItem !== "function" ||
+      typeof storage.setItem !== "function" ||
+      typeof storage.removeItem !== "function"
+    ) {
+      return null;
+    }
+    // A full/quota-limited store may still be readable. Do not hide saved state
+    // by probing with a write; individual operations report their own failures.
     return storage;
   } catch {
     return null;
