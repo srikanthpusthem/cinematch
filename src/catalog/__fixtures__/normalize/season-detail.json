@@ -1,0 +1,18 @@
+{
+  "season_number": 1,
+  "name": " Season 1 ",
+  "overview": "Walter\u00a0White begins.",
+  "air_date": "2008-01-20",
+  "poster_path": "/1BP4xYv9ZG4ZVHkL7ocOziBbSYH.jpg",
+  "episodes": [
+    {
+      "episode_number": 1
+    },
+    {
+      "episode_number": 2
+    },
+    {
+      "episode_number": 3
+    }
+  ]
+}
