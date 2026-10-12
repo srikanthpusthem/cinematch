@@ -119,7 +119,7 @@ function ResultsBody({
   );
 
   return (
-    <div className="mt-6 space-y-4">
+    <section aria-label="Recommendations" className="mt-6 space-y-4">
       {result.confidence === "cold-start" ? (
         <p role="status">
           Cold start: lower confidence because no quiz titles were chosen.
@@ -174,7 +174,7 @@ function ResultsBody({
       </div>
 
       <EditRow onEdit={onEdit} />
-    </div>
+    </section>
   );
 }
 
