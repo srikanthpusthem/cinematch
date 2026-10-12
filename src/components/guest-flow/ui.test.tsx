@@ -2,11 +2,20 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { EMPTY_ANSWERS, MOODS } from "@/lib/guest-flow/types";
 import { TonightStep } from "./tonight-step";
-import { FilmMark, PosterPlaceholder, StepHeader } from "./ui";
+import { FilmMark, MoodIcon, PosterPlaceholder, StepHeader } from "./ui";
 
 const noop = () => undefined;
 
 describe("cinematic UI semantics", () => {
+  it("uses decorative SVG mood illustrations without platform-dependent emoji", () => {
+    for (const mood of MOODS) {
+      const html = renderToStaticMarkup(<MoodIcon mood={mood.id} />);
+      expect(html).toContain("<svg");
+      expect(html).toContain('aria-hidden="true"');
+      expect(html).toContain('stroke="currentColor"');
+      expect(html).not.toContain("✳");
+    }
+  });
   it("keeps visual marks decorative and placeholders free of invented titles", () => {
     const mark = renderToStaticMarkup(<FilmMark />);
     expect(mark).toContain('aria-hidden="true"');

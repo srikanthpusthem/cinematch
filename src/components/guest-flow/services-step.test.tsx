@@ -121,3 +121,50 @@ describe("ServicesStep", () => {
     expect(onContinue).not.toHaveBeenCalled();
   });
 });
+
+describe("additional subscription disclosure", () => {
+  it("puts familiar exact-name services first and retains every extra provider", () => {
+    const services = [
+      { id: "channel", name: "Example Amazon Channel" },
+      ...SERVICE_OPTIONS,
+    ];
+    const html = renderToStaticMarkup(
+      <ServicesStep
+        answers={{ ...EMPTY_ANSWERS, serviceIds: ["channel"] }}
+        services={services}
+        onToggle={() => undefined}
+        onSkip={() => undefined}
+        onContinue={() => undefined}
+        canContinue
+      />,
+    );
+    expect(html.indexOf('value="netflix"')).toBeLessThan(
+      html.indexOf('value="channel"'),
+    );
+    expect(html).toContain("More subscriptions (1)");
+    expect(html).toContain("1 selected</span>");
+    expect(html).toContain('value="channel"');
+    expect(html).toContain("Selected · subscription");
+    expect(html.match(/type="checkbox"/g)).toHaveLength(services.length);
+  });
+
+  it("keeps a useful first group when no familiar provider names are present", () => {
+    const services = Array.from({ length: 8 }, (_, index) => ({
+      id: `channel${index}`,
+      name: `Fixture channel ${index}`,
+    }));
+    const html = renderToStaticMarkup(
+      <ServicesStep
+        answers={EMPTY_ANSWERS}
+        services={services}
+        onToggle={() => undefined}
+        onSkip={() => undefined}
+        onContinue={() => undefined}
+        canContinue={false}
+      />,
+    );
+    expect(html).toContain("More subscriptions (2)");
+    expect(html.match(/type="checkbox"/g)).toHaveLength(8);
+    expect(html).toContain('value="channel7"');
+  });
+});

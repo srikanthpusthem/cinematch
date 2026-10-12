@@ -39,6 +39,27 @@ jobs:
       - name: Run Playwright smoke test
         run: npm run test:e2e
 
+      # User-requested review images only. Production credentials are never used.
+      - name: Capture UI review with sample data
+        if: github.event_name == 'pull_request' && github.event.pull_request.number == 81
+        env:
+          CINEMATCH_UI_REVIEW: "1"
+          REVIEW_SOURCE_COMMIT: ${{ github.event.pull_request.head.sha }}
+        run: npx playwright test --config playwright.ui-review.config.ts
+
+      - name: Upload sample-data UI review images
+        if: github.event_name == 'pull_request' && github.event.pull_request.number == 81
+        # Official actions/upload-artifact v4.6.2, verified release commit.
+        # https://github.com/actions/upload-artifact/releases/tag/v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cinematch-ui-review-sample-data-${{ github.event.pull_request.head.sha }}
+          path: |
+            test-results/ui-review/*.png
+            test-results/ui-review/*-sample-data-manifest.json
+          if-no-files-found: error
+          retention-days: 7
+
   db:
     runs-on: ubuntu-latest
     services:

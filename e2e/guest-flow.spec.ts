@@ -30,7 +30,9 @@ test("cold start shows one best match and four alternatives", async ({
     results.getByRole("heading", { name: "Best match" }),
   ).toBeVisible();
   await expect(results.getByText("About Time")).toBeVisible();
-  await expect(results.getByText("Cold start: lower confidence")).toBeVisible();
+  await expect(
+    results.getByText("A fresh start: lower confidence"),
+  ).toBeVisible();
   await expect(
     results.getByRole("heading", { name: "Alternatives" }),
   ).toBeVisible();
@@ -83,7 +85,7 @@ test("quiz seeds stay off the results step", async ({ page }) => {
   await chooseComfortMovie(page);
   await page.getByRole("button", { name: "See picks" }).click();
   const results = page.getByRole("region", { name: "Your picks" });
-  await expect(results.getByText("Based on your quiz seeds.")).toBeVisible();
+  await expect(results.getByText("Inspired by your favorites.")).toBeVisible();
   await expect(results.getByText("The Grand Budapest Hotel")).toHaveCount(0);
   await expect(
     results.getByText("Shares Comedy with a quiz seed").first(),

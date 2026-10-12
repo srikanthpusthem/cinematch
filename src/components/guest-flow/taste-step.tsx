@@ -42,6 +42,7 @@ export function TasteStep({
 }) {
   const [seeds, setSeeds] = useState<CatalogPhase>({ type: "loading" });
   const [retry, setRetry] = useState(0);
+  const [quizExpanded, setQuizExpanded] = useState(false);
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState<SearchPhase>({ type: "idle" });
   const [knownTitles, setKnownTitles] = useState<Record<string, CatalogTitle>>(
@@ -115,16 +116,18 @@ export function TasteStep({
       : seeds.type === "ready"
         ? seeds.titles
         : [];
+  const visibleTitles =
+    search.type === "ready" || quizExpanded ? titles : titles.slice(0, 6);
   return (
     <section className="flow-step" aria-labelledby="taste-heading">
       <StepHeader
         id="taste-heading"
-        eyebrow="Your kind of story"
+        eyebrow="Tell us what you love"
         title="Optional taste quiz"
       >
         <p>
-          Quiz seeds, not recommendations. Pick 3 to 5 favorites, or continue
-          with none. You do not have to choose unfamiliar titles.
+          Pick 3 to 5 favorites, or keep going without them. Quiz seeds, not
+          recommendations. No need to choose something you haven’t seen.
         </p>
       </StepHeader>
       <form
@@ -206,8 +209,8 @@ export function TasteStep({
           <legend>
             {search.type === "ready" ? "Search results" : "Quiz seeds"}
           </legend>
-          <div className="seed-grid">
-            {titles.map((title) => {
+          <div id="quiz-seed-grid" className="seed-grid">
+            {visibleTitles.map((title) => {
               const selected = answers.seedIds.includes(title.id);
               const disabled = !selected && answers.seedIds.length >= 5;
               const posterUrl = catalogPosterUrl(title.posterPath);
@@ -254,6 +257,19 @@ export function TasteStep({
               );
             })}
           </div>
+          {search.type !== "ready" && titles.length > 6 ? (
+            <button
+              type="button"
+              className="button-text quiz-expand"
+              aria-expanded={quizExpanded}
+              aria-controls="quiz-seed-grid"
+              onClick={() => setQuizExpanded((expanded) => !expanded)}
+            >
+              {quizExpanded
+                ? "Show fewer quiz titles"
+                : "Show more quiz titles"}
+            </button>
+          ) : null}
         </fieldset>
       ) : search.type === "ready" || seeds.type === "ready" ? (
         <p role="status" className="flow-notice">
@@ -288,38 +304,50 @@ export function TasteStep({
         {answers.seedIds.length} selected.{error ? ` ${error}` : null}
       </p>
       {genres.length > 0 || answers.avoidedGenres.length > 0 ? (
-        <fieldset className="genre-fieldset">
-          <legend className="text-sm font-medium">Genres to avoid</legend>
-          {genres.map((genre) => (
-            <label key={genre.id} className="genre-choice">
-              <input
-                type="checkbox"
-                checked={answers.avoidedGenres.includes(genre.id)}
-                onChange={() => onToggleGenre(genre.id)}
-              />
-              <span className="genre-name">{genre.name}</span>
-              <span className="genre-kind">
-                (
-                {genre.kinds
-                  .map((kind) => (kind === "movie" ? "movies" : "series"))
-                  .join(" and ")}
-                )
+        <details className="genre-details">
+          <summary>
+            Anything you’d rather skip?
+            {answers.avoidedGenres.length > 0 ? (
+              <span className="genre-count">
+                {answers.avoidedGenres.length} avoided
               </span>
-            </label>
-          ))}
-          {answers.avoidedGenres
-            .filter((id) => !genres.some((genre) => genre.id === id))
-            .map((id) => (
-              <label key={id} className="genre-choice">
+            ) : (
+              <span className="optional-label">Optional</span>
+            )}
+          </summary>
+          <fieldset className="genre-fieldset">
+            <legend className="text-sm font-medium">Genres to avoid</legend>
+            {genres.map((genre) => (
+              <label key={genre.id} className="genre-choice">
                 <input
                   type="checkbox"
-                  checked
-                  onChange={() => onToggleGenre(id)}
+                  checked={answers.avoidedGenres.includes(genre.id)}
+                  onChange={() => onToggleGenre(genre.id)}
                 />
-                Saved genre not listed (catalog {id})
+                <span className="genre-name">{genre.name}</span>
+                <span className="genre-kind">
+                  (
+                  {genre.kinds
+                    .map((kind) => (kind === "movie" ? "movies" : "series"))
+                    .join(" and ")}
+                  )
+                </span>
               </label>
             ))}
-        </fieldset>
+            {answers.avoidedGenres
+              .filter((id) => !genres.some((genre) => genre.id === id))
+              .map((id) => (
+                <label key={id} className="genre-choice">
+                  <input
+                    type="checkbox"
+                    checked
+                    onChange={() => onToggleGenre(id)}
+                  />
+                  Saved genre not listed (catalog {id})
+                </label>
+              ))}
+          </fieldset>
+        </details>
       ) : null}
       <div className="step-actions">
         <button

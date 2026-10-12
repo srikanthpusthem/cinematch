@@ -285,52 +285,10 @@ export function GuestFlow() {
         </div>
         <span className="header-note">
           <span aria-hidden="true" className="status-dot" />
-          Your next good watch
+          Movie night, made easy.
         </span>
       </header>
       <div className="cinema-layout">
-        <aside className="cinema-intro" aria-label="About CineMatch">
-          <p className="eyebrow">Make a night of it</p>
-          <p className="hero-title">
-            Less scrolling.
-            <br />
-            <em>More watching.</em>
-          </p>
-          <p className="hero-description">
-            Find something to watch in under two minutes.
-          </p>
-          <div className="cinema-art" aria-hidden="true">
-            <div className="art-orbit art-orbit-one" />
-            <div className="art-orbit art-orbit-two" />
-            <div className="art-orbit art-orbit-three" />
-            <div className="cinema-ticket">
-              <FilmMark />
-              <span>Settle in.</span>
-              <span className="ticket-detail">A story for tonight</span>
-              <div className="ticket-perforation" />
-              <span className="ticket-stamp">CM / YOUR EVENING</span>
-            </div>
-            <svg
-              className="art-star"
-              width="48"
-              height="48"
-              viewBox="0 0 48 48"
-              fill="none"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <path
-                d="M24 4v40M4 24h40M10 10l28 28M10 38l28-28"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-          <p className="privacy-note">
-            Private US catalog · metadata-based matching · no account needed
-          </p>
-        </aside>
         <div className="flow-workspace">
           <ol className="flow-progress" aria-label="Recommendation progress">
             {FLOW_STEPS.map((item, index) => (
@@ -346,13 +304,13 @@ export function GuestFlow() {
                 }
               >
                 <span className="progress-number" aria-hidden="true">
-                  {index < stepIndex ? "✓" : `0${index + 1}`}
+                  {index < stepIndex ? "✓" : index + 1}
                 </span>
                 <span>{item.label}</span>
               </li>
             ))}
           </ol>
-          <p className="step-count" aria-live="polite">
+          <p className="step-count sr-only" aria-live="polite">
             Step {stepIndex + 1} of {FLOW_STEPS.length} ·{" "}
             {FLOW_STEPS[stepIndex]?.label}
           </p>

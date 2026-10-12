@@ -9,15 +9,8 @@ import {
   type MovieLength,
   type SeriesLength,
 } from "@/lib/guest-flow/types";
-import { StepHeader } from "./ui";
+import { MoodIcon, StepHeader } from "./ui";
 
-const moodSymbols: Record<string, string> = {
-  laugh: "☺",
-  cry: "◡",
-  thrill: "ϟ",
-  think: "✳",
-  comfort: "☾",
-};
 const moodDetails: Record<string, string> = {
   laugh: "Keep it light",
   cry: "Feel something",
@@ -44,12 +37,11 @@ export function TonightStep({
     <section className="flow-step" aria-labelledby="tonight-heading">
       <StepHeader
         id="tonight-heading"
-        eyebrow="Set the scene"
+        eyebrow="What sounds good?"
         title="What do you want tonight?"
       >
         <p>
-          A little escapism, a big feeling, or something that stays with you.
-          Choose the mood and time you have.
+          Pick a mood and the time you have. Let’s find something that fits.
         </p>
       </StepHeader>
       <ChoiceGroup
@@ -127,6 +119,7 @@ function ChoiceGroup<T extends string>({
           <label
             key={option.id}
             className="choice-card"
+            data-mood={name === "mood" ? option.id : undefined}
             data-selected={value === option.id}
           >
             <input
@@ -138,7 +131,7 @@ function ChoiceGroup<T extends string>({
             />
             {name === "mood" ? (
               <span className="mood-symbol" aria-hidden="true">
-                {moodSymbols[option.id]}
+                <MoodIcon mood={option.id} />
               </span>
             ) : null}
             <span className="choice-copy">

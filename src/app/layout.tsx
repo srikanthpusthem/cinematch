@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "Find a movie or series to watch in under two minutes.",
 };
 
-export const viewport: Viewport = { themeColor: "#101313" };
+export const viewport: Viewport = { themeColor: "#fcfbf8" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -32,7 +32,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </a>
         {children}
         <footer className="site-footer">
-          <span>Good stories. Your kind of evening.</span>
+          <span>
+            Private US catalog · Metadata-based matching · No account needed
+          </span>
           <Link href="/about">About &amp; credits</Link>
         </footer>
       </body>

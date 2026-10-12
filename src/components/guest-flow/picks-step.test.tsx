@@ -133,7 +133,7 @@ describe("PicksStep", () => {
     expect(html).toContain("Paddington 2");
     expect(html).toContain("2h 3m");
     expect(html).toContain("Cold start, lower confidence");
-    expect(html).toContain("Based on your quiz seeds.");
+    expect(html).toContain("Inspired by your favorites.");
     expect(html).toContain("Alternatives");
   });
 
@@ -149,7 +149,7 @@ describe("PicksStep", () => {
     expect(html).toContain("Only 1 match fits");
     expect(html).toContain("Nothing was added");
     expect(html).toContain("No alternatives fit.");
-    expect(html).toContain("Cold start: lower confidence");
+    expect(html).toContain("A fresh start: lower confidence");
   });
 
   it("labels subscription separately from rent/buy and shows freshness", () => {
@@ -458,5 +458,64 @@ describe("selected subscription presentation", () => {
     expect(html).not.toContain("Your selected service");
     expect(html).toContain("Rent or buy (not included)");
     expect(html).toContain("Apple TV+: rent");
+  });
+});
+
+describe("provider disclosure", () => {
+  it("keeps every selected subscription visible before tucking away other offers", () => {
+    const offers = Array.from({ length: 7 }, (_, index) => ({
+      serviceId: `service${index}`,
+      serviceName: `Service ${index}`,
+      access: "subscription" as const,
+      freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+    }));
+    const html = renderToStaticMarkup(
+      <PicksStep
+        selectedServiceIds={offers.slice(0, 5).map((offer) => offer.serviceId)}
+        phase={{
+          type: "ready",
+          result: {
+            status: "ok",
+            confidence: "seeded",
+            best: { ...basePick, offers },
+            alternatives: [],
+          },
+        }}
+        onBack={() => undefined}
+        onEdit={() => undefined}
+        onRetry={() => undefined}
+      />,
+    );
+    const visible = html.match(
+      /<ul aria-label="Subscription \(included\)"[^>]*>([\s\S]*?)<\/ul>/,
+    )?.[1];
+    expect(visible).toBeTruthy();
+    for (let index = 0; index < 5; index++)
+      expect(visible).toContain(`Service ${index}`);
+    expect(visible).not.toContain("Service 5");
+    expect(html).toContain("More subscription options (2)");
+    expect(html).toContain('aria-label="More Subscription (included)"');
+    expect(html).toContain("Service 6");
+  });
+
+  it("preserves paid-offer labels and dates inside the extra-options disclosure", () => {
+    const offers = Array.from({ length: 5 }, (_, index) => ({
+      serviceId: `paid${index}`,
+      serviceName: `Paid service ${index}`,
+      access: "rent" as const,
+      freshnessCheckedAt: FIXTURE_FRESH_CHECKED_AT,
+    }));
+    const html = renderReady({
+      status: "ok",
+      confidence: "seeded",
+      best: { ...basePick, offers },
+      alternatives: [],
+    });
+    expect(html).toContain("Rent or buy (not included)");
+    expect(html).toContain("More rent or buy options (2)");
+    expect(html).toContain("Paid service 4: rent");
+    expect(html).toContain("checked 2026-09-27");
+    expect(html).not.toContain("Your selected service");
+    expect(html).not.toContain(">Watch</a>");
   });
 });

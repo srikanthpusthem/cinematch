@@ -56,7 +56,7 @@ export function PicksStep({
     >
       <StepHeader
         id="picks-heading"
-        eyebrow="The evening starts here"
+        eyebrow="Let’s make a night of it"
         title="Your picks"
       >
         <p>
@@ -82,7 +82,7 @@ export function PicksStep({
 
       {phase.type === "ready" && phase.result.status === "error" ? (
         <div className="result-state notice-error">
-          <p className="eyebrow">A brief intermission</p>
+          <p className="eyebrow">Just a little hiccup</p>
           <p role="alert">{phase.result.message}</p>
           <button
             type="button"
@@ -97,7 +97,7 @@ export function PicksStep({
       {phase.type === "ready" && phase.result.status === "empty" ? (
         <div className="result-state">
           <FilmMark className="empty-film" />
-          <p className="eyebrow">Let’s try a different scene</p>
+          <p className="eyebrow">Let’s try something else</p>
           <p role="status">{phase.result.message}</p>
           <EditRow onEdit={onEdit} />
         </div>
@@ -162,11 +162,11 @@ function ResultsBody({
     <div className="results-body">
       {result.confidence === "cold-start" ? (
         <p className="flow-notice" role="status">
-          Cold start: lower confidence because no quiz titles were chosen.
+          A fresh start: lower confidence because no favorites were chosen.
         </p>
       ) : (
         <p className="flow-notice" role="status">
-          Based on your quiz seeds.
+          Inspired by your favorites.
         </p>
       )}
 
@@ -277,7 +277,7 @@ function PickCard({
     >
       {heading ? (
         <h3 className="match-label">
-          <span aria-hidden="true">✳</span> {heading}
+          <span aria-hidden="true">✓</span> {heading}
         </h3>
       ) : null}
       <div className="pick-layout">
@@ -302,73 +302,73 @@ function PickCard({
           </p>
           <h4 className="pick-title">{pick.title}</h4>
           <p className="pick-reason">{pick.reason}</p>
-          <OfferLists
-            subscriptions={subscriptions}
-            selectedServiceIds={selectedServiceIds}
-            rentBuy={rentBuy}
-            freeOffers={freeOffers}
-            stale={stale}
-            unavailable={
-              source === "catalog" && pick.availability?.state !== "current"
-            }
-          />
+        </div>
+        <OfferLists
+          subscriptions={subscriptions}
+          selectedServiceIds={selectedServiceIds}
+          rentBuy={rentBuy}
+          freeOffers={freeOffers}
+          stale={stale}
+          unavailable={
+            source === "catalog" && pick.availability?.state !== "current"
+          }
+        />
 
-          <div className="pick-links">
-            {verifiedWatchUrl ? (
-              <a
-                href={verifiedWatchUrl}
-                className="button-primary"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                Watch
-              </a>
-            ) : (
-              <p className="playback-note" role="status">
-                {source === "mock"
-                  ? "Watch unavailable — no verified playback link on this mock offer."
-                  : "Direct Watch unavailable: no verified playback link. Check availability with the provider."}
-              </p>
-            )}
-            {source === "catalog" && pick.availability?.infoUrl ? (
-              <a
-                href={pick.availability.infoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="provider-link"
-              >
-                {availabilityLinkLabel("provider-info")}
-                <span className="provider-external-icon" aria-hidden="true">
-                  ↗
-                </span>
-              </a>
-            ) : null}
-            {source === "catalog" && pick.availability ? (
-              <p className="availability-note">
-                Availability {pick.availability.state}
-                {pick.availability.checkedAt
-                  ? ` · checked ${formatCheckedAt(pick.availability.checkedAt)}`
-                  : " · never verified"}
-              </p>
-            ) : null}
+        <div className="pick-links">
+          {verifiedWatchUrl ? (
+            <a
+              href={verifiedWatchUrl}
+              className="button-primary"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Watch
+            </a>
+          ) : (
+            <p className="playback-note" role="status">
+              {source === "mock"
+                ? "Watch unavailable — no verified playback link on this mock offer."
+                : "Direct Watch unavailable: no verified playback link. Check availability with the provider."}
+            </p>
+          )}
+          {source === "catalog" && pick.availability?.infoUrl ? (
+            <a
+              href={pick.availability.infoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="provider-link"
+            >
+              {availabilityLinkLabel("provider-info")}
+              <span className="provider-external-icon" aria-hidden="true">
+                ↗
+              </span>
+            </a>
+          ) : null}
+          {source === "catalog" && pick.availability ? (
+            <p className="availability-note">
+              Availability {pick.availability.state}
+              {pick.availability.checkedAt
+                ? ` · checked ${formatCheckedAt(pick.availability.checkedAt)}`
+                : " · never verified"}
+            </p>
+          ) : null}
 
-            <div className="feedback-actions">
-              <FeedbackButton
-                label="Watched"
-                disabled={feedback?.suppressedContentIds.includes(pick.id)}
-                onClick={() => onFeedback?.(pick.id, "watched")}
-              />
-              <FeedbackButton
-                label="Like"
-                disabled={feedback?.likedContentIds.includes(pick.id)}
-                onClick={() => onFeedback?.(pick.id, "like")}
-              />
-              <FeedbackButton
-                label="Not for me"
-                disabled={feedback?.dislikedContentIds.includes(pick.id)}
-                onClick={() => onFeedback?.(pick.id, "not-for-me")}
-              />
-            </div>
+          <div className="feedback-actions">
+            <FeedbackButton
+              label="Watched"
+              disabled={feedback?.suppressedContentIds.includes(pick.id)}
+              onClick={() => onFeedback?.(pick.id, "watched")}
+            />
+            <FeedbackButton
+              label="Like"
+              disabled={feedback?.likedContentIds.includes(pick.id)}
+              onClick={() => onFeedback?.(pick.id, "like")}
+            />
+            <FeedbackButton
+              label="Not for me"
+              disabled={feedback?.dislikedContentIds.includes(pick.id)}
+              onClick={() => onFeedback?.(pick.id, "not-for-me")}
+            />
           </div>
         </div>
       </div>
@@ -391,87 +391,130 @@ function OfferLists({
   stale: boolean;
   unavailable: boolean;
 }) {
+  const sortedSubscriptions = [...subscriptions].sort(
+    (a, b) =>
+      Number(selectedServiceIds.includes(b.serviceId)) -
+      Number(selectedServiceIds.includes(a.serviceId)),
+  );
   return (
     <div className="offer-lists">
-      <div>
-        <p className="offer-heading">Subscription (included)</p>
-        {subscriptions.length > 0 ? (
-          <ul aria-label="Subscription (included)" className="offer-list">
-            {[...subscriptions]
-              .sort(
-                (a, b) =>
-                  Number(selectedServiceIds.includes(b.serviceId)) -
-                  Number(selectedServiceIds.includes(a.serviceId)),
-              )
-              .map((offer) => (
-                <li
-                  key={`${offer.serviceId}-${offer.access}`}
-                  className={
-                    selectedServiceIds.includes(offer.serviceId)
-                      ? "selected-offer"
-                      : undefined
-                  }
-                >
-                  {offer.serviceName}
-                  {selectedServiceIds.includes(offer.serviceId) ? (
-                    <span className="selected-offer-label">
-                      Your selected service
-                    </span>
-                  ) : null}
-                  <span className="offer-date">
-                    {" "}
-                    · checked {formatCheckedAt(offer.freshnessCheckedAt)}
-                    {stale ? " · stale" : ""}
-                  </span>
-                </li>
-              ))}
-          </ul>
-        ) : (
-          <p className="offer-empty">
-            {unavailable
-              ? "Subscription availability is not currently verified."
-              : "No included subscription on selected US services."}
-          </p>
-        )}
-      </div>
-      <div>
-        <p className="offer-heading">Rent or buy (not included)</p>
-        {rentBuy.length > 0 ? (
-          <ul aria-label="Rent or buy (not included)" className="offer-list">
-            {rentBuy.map((offer) => (
-              <li key={`${offer.serviceId}-${offer.access}`}>
-                {offer.serviceName}: {offer.access}
-                <span className="offer-date">
-                  {" "}
-                  · checked {formatCheckedAt(offer.freshnessCheckedAt)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="offer-empty">
-            {unavailable
-              ? "Rent or buy availability is not currently verified."
-              : "No rent or buy options listed for this title."}
-          </p>
-        )}
-      </div>
+      <OfferGroup
+        label="Subscription (included)"
+        moreLabel="More subscription options"
+        offers={sortedSubscriptions}
+        kind="subscription"
+        selectedServiceIds={selectedServiceIds}
+        stale={stale}
+        emptyMessage={
+          unavailable
+            ? "Subscription availability is not currently verified."
+            : "No included subscription on selected US services."
+        }
+      />
+      <OfferGroup
+        label="Rent or buy (not included)"
+        moreLabel="More rent or buy options"
+        offers={rentBuy}
+        kind="rent-buy"
+        emptyMessage={
+          unavailable
+            ? "Rent or buy availability is not currently verified."
+            : "No rent or buy options listed for this title."
+        }
+      />
       {freeOffers.length > 0 ? (
-        <div>
-          <p className="offer-heading">
-            Free or ad-supported (not a subscription)
-          </p>
-          <ul aria-label="Free or ad-supported" className="offer-list">
-            {freeOffers.map((offer) => (
-              <li key={`${offer.serviceId}-${offer.access}`}>
-                {offer.serviceName}:{" "}
-                {offer.access === "ads" ? "with ads" : "free"} · checked{" "}
-                {formatCheckedAt(offer.freshnessCheckedAt)}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <OfferGroup
+          label="Free or ad-supported (not a subscription)"
+          listLabel="Free or ad-supported"
+          moreLabel="More free or ad-supported options"
+          offers={freeOffers}
+          kind="free"
+        />
       ) : null}
+    </div>
+  );
+}
+
+function OfferGroup({
+  label,
+  listLabel = label,
+  moreLabel,
+  offers,
+  kind,
+  selectedServiceIds = [],
+  stale = false,
+  emptyMessage,
+}: {
+  label: string;
+  listLabel?: string;
+  moreLabel: string;
+  offers: ServiceOffer[];
+  kind: "subscription" | "rent-buy" | "free";
+  selectedServiceIds?: readonly string[];
+  stale?: boolean;
+  emptyMessage?: string;
+}) {
+  // Selected subscriptions remain visible even when other providers are tucked away.
+  const visibleCount =
+    kind === "subscription"
+      ? Math.max(
+          3,
+          offers.filter((offer) => selectedServiceIds.includes(offer.serviceId))
+            .length,
+        )
+      : 3;
+  const visibleOffers = offers.slice(0, visibleCount);
+  const extraOffers = offers.slice(visibleCount);
+  const rows = (items: ServiceOffer[]) =>
+    items.map((offer) => (
+      <li
+        key={`${offer.serviceId}-${offer.access}`}
+        className={
+          kind === "subscription" &&
+          selectedServiceIds.includes(offer.serviceId)
+            ? "selected-offer"
+            : undefined
+        }
+      >
+        {offer.serviceName}
+        {kind === "rent-buy"
+          ? `: ${offer.access}`
+          : kind === "free"
+            ? `: ${offer.access === "ads" ? "with ads" : "free"}`
+            : null}
+        {kind === "subscription" &&
+        selectedServiceIds.includes(offer.serviceId) ? (
+          <span className="selected-offer-label">Your selected service</span>
+        ) : null}
+        <span className="offer-date">
+          {" "}
+          · checked {formatCheckedAt(offer.freshnessCheckedAt)}
+          {kind === "subscription" && stale ? " · stale" : ""}
+        </span>
+      </li>
+    ));
+  return (
+    <div>
+      <p className="offer-heading">{label}</p>
+      {offers.length > 0 ? (
+        <>
+          <ul aria-label={listLabel} className="offer-list">
+            {rows(visibleOffers)}
+          </ul>
+          {extraOffers.length > 0 ? (
+            <details className="offer-details">
+              <summary>
+                {moreLabel} ({extraOffers.length})
+              </summary>
+              <ul aria-label={`More ${listLabel}`} className="offer-list">
+                {rows(extraOffers)}
+              </ul>
+            </details>
+          ) : null}
+        </>
+      ) : (
+        <p className="offer-empty">{emptyMessage}</p>
+      )}
     </div>
   );
 }
