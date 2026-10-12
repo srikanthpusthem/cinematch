@@ -1,0 +1,35 @@
+{
+  "id": 1002,
+  "title": "Broken Record",
+  "original_language": "xx",
+  "release_date": "2023-02-30",
+  "runtime": 99999,
+  "vote_average": 11,
+  "vote_count": -4,
+  "popularity": -3,
+  "status": "Released Soon",
+  "imdb_id": "xyz",
+  "poster_path": "https://evil.example/x.jpg",
+  "backdrop_path": "/../../etc/passwd.jpg",
+  "genres": [
+    {
+      "id": 18,
+      "name": "Drama"
+    },
+    {
+      "id": 0,
+      "name": "Zero"
+    },
+    {
+      "name": "No id"
+    },
+    {
+      "id": 35,
+      "name": "   "
+    },
+    "Comedy"
+  ],
+  "keywords": {
+    "keywords": "not-a-list"
+  }
+}

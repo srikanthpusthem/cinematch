@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "test:db": "vitest run --config vitest.db.config.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "catalog:ingest": "tsx scripts/ingest-catalog.ts"
   },
   "dependencies": {
     "next": "16.3.6",
@@ -36,6 +37,7 @@
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.4.2",
     "tailwindcss": "^4",
+    "tsx": "4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.2"
   }

@@ -285,8 +285,15 @@ export function createTmdbClient(options: TmdbClientOptions): CatalogSource {
       paginate("/discover/movie", params, parseMovieSummary, opts),
     discoverSeries: (params = {}, opts = {}) =>
       paginate("/discover/tv", params, parseSeriesSummary, opts),
-    getMovie: (id) => get(`/movie/${id}`, {}, parseMovieDetails),
-    getSeries: (id) => get(`/tv/${id}`, {}, parseSeriesDetails),
+    // Keywords ride along in the same request (append_to_response).
+    getMovie: (id) =>
+      get(
+        `/movie/${id}`,
+        { append_to_response: "keywords" },
+        parseMovieDetails,
+      ),
+    getSeries: (id) =>
+      get(`/tv/${id}`, { append_to_response: "keywords" }, parseSeriesDetails),
     getSeason: (seriesId, seasonNumber) =>
       get(`/tv/${seriesId}/season/${seasonNumber}`, {}, parseSeasonDetails),
     getMovieWatchProviders: (id) =>
