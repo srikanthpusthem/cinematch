@@ -310,7 +310,22 @@ export function GuestFlow() {
               <div className="ticket-perforation" />
               <span className="ticket-stamp">CM / YOUR EVENING</span>
             </div>
-            <span className="art-star">✳</span>
+            <svg
+              className="art-star"
+              width="48"
+              height="48"
+              viewBox="0 0 48 48"
+              fill="none"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M24 4v40M4 24h40M10 10l28 28M10 38l28-28"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </svg>
           </div>
           <p className="privacy-note">
             Private US catalog · metadata-based matching · no account needed
